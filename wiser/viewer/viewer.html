@@ -1,0 +1,54 @@
+<head>
+<style>
+span.active {
+    background-color: skyblue;
+    box-shadow: 1px 1px 1px grey;
+}
+
+.panel-heading {
+    position: relative;
+}
+
+.panel-footer {
+    position: relative;
+}
+
+.panel-left-justify {
+    position: absolute;
+    right: 15px;
+    top: 20px;
+}
+
+.viewer-page {
+    display: none;
+}
+
+</style>
+</head>
+
+<div id="viewer" class="viewer-pane panel panel-default" tabindex="0">
+    <div class="panel-heading">
+        <h3 class="panel-title"><i class="fa fa-eye fa-lg" aria-hidden="true"></i> Viewer</h3>
+        <div id="candidate-caption" class="panel-left-justify"></div>
+    </div>
+    <div class="panel-body" style="height:%spx">%s</div>
+    <div class="panel-footer">
+        <div class="btn-group" role="group" aria-label="...">
+
+            <!-- Previous page --!>
+            <button id="prev-page" type="button" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="Previous">
+                <i class="fa fa-step-backward" aria-hidden="true"></i>
+            </button>
+
+            <!-- Next page --!>
+            <button id="next-page" type="button" class="btn btn-default" data-toggle="tooltip" data-placement="top" title="Next">
+                <i class="fa fa-step-forward" aria-hidden="true"></i>
+            </button>
+        </div>
+        &nbsp;
+        <select id="source" style="min-width: 180px">
+            %s
+        </select>
+        <div class="instance-num panel-left-justify">Instance <span id="page">0</span></div>
+    </div>
+</div>
