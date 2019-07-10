@@ -1,6 +1,5 @@
 import torch
 from allennlp.modules.conditional_random_field import ConditionalRandomField
-import pdb
 
 class WiserConditionalRandomField(ConditionalRandomField):
     def expected_log_likelihood(

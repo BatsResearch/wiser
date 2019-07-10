@@ -11,10 +11,7 @@ from allennlp.nn import InitializerApplicator, RegularizerApplicator
 import allennlp.nn.util as util
 from wiser.modules.conditional_random_field import WiserConditionalRandomField
 import numpy as np
-import pdb
 from torch.nn.functional import log_softmax, softmax
-from torch.nn import MSELoss, KLDivLoss, NLLLoss, MSELoss, BCEWithLogitsLoss, CrossEntropyLoss
-
 
 # Computes CE-Loss with respect to one-hot vector corresponding to the tag with highest probability
 def one_hot_cross_entropy_loss(logits, unary_marginals, num_tags):
@@ -71,11 +68,6 @@ class WiserCrfTagger(CrfTagger):
             include_start_end_transitions=include_start_end_transitions
         )
 
-        self.l = 100
-
-        self.regularization_penalty = 0
-        self.detection = 0
-        self.masked_fraction = 0
 
     @overrides
     def forward(self,  # type: ignore
@@ -116,19 +108,10 @@ class WiserCrfTagger(CrfTagger):
 
         unary_marginals = kwargs.get('unary_marginals')
         pairwise_marginals = kwargs.get('pairwise_marginals')
-        vote_mask = kwargs.get('vote_mask').long()
+        vote_mask = kwargs.get('vote_mask')
 
 
         if unary_marginals is not None:
-            # mask = mask.float() * vote_mask.float()
-            # mask = mask.float()
-            # values, indices = unary_marginals.max(-1)           # computes target one hot vector from unary marginals
-            # indices = indices.view(-1)
-            # new_mask = mask.view(-1)
-            # stacked_mask = torch.stack([new_mask] * num_tags, -1)
-            #
-            # loss = CrossEntropyLoss()
-            # output['loss'] = loss(logits.view(-1, num_tags) * stacked_mask, new_mask.long() * indices)
             ell = self.crf.expected_log_likelihood(logits=logits,
                                                 mask=mask,
                                                 unary_marginals=unary_marginals,
