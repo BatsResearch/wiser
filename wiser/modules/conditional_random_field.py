@@ -1,14 +1,13 @@
 import torch
-
 from allennlp.modules.conditional_random_field import ConditionalRandomField
-
+import pdb
 
 class WiserConditionalRandomField(ConditionalRandomField):
     def expected_log_likelihood(
             self,
             logits: torch.Tensor,
             mask: torch.ByteTensor,
-            unary_marginals: torch.Tensor,
+            unary_marginals: torch.FloatTensor,
             pairwise_marginals: torch.Tensor = None) -> torch.Tensor:
         """
         Computes the expected log likelihood of CRFs defined by batch of logits
@@ -41,9 +40,10 @@ class WiserConditionalRandomField(ConditionalRandomField):
 
         # We compute the partition function before rearranging the inputs
         partition = self._input_likelihood(logits, mask)
-
         # Transpose batch size and sequence dimensions
         logits = logits.transpose(0, 1).contiguous()                 # (seq_len, batch_size, num_tags)
+        mask = mask.float().transpose(0, 1).contiguous()             # (seq_len, batch_size)
+
         unary_marginals = unary_marginals.transpose(0, 1)            # (seq_len, batch_size, num_tags)
         unary_marginals = unary_marginals.contiguous()
         if pairwise_marginals is not None:
@@ -51,14 +51,16 @@ class WiserConditionalRandomField(ConditionalRandomField):
             pairwise_marginals = pairwise_marginals.contiguous()
         else:
             pairwise_marginals = torch.zeros(
-                (seq_len - 1, batch_size, num_tags, num_tags))
+                                    (seq_len - 1, batch_size, num_tags, num_tags),
+                                    device=logits.device.type)
+
             for i in range(seq_len - 1):
                 for j in range(batch_size):
                     temp1 = unary_marginals[i, j]
                     temp2 = unary_marginals[i+1, j]
                     temp = torch.ger(temp1, temp2)
                     pairwise_marginals[i, j, :, :] = temp
-        mask = mask.float().transpose(0, 1).contiguous()             # (seq_len, batch_size)
+
 
         # Start with the transition scores from start_tag to the
         # first tag in each input
@@ -67,7 +69,8 @@ class WiserConditionalRandomField(ConditionalRandomField):
             temp = temp * unary_marginals[0]                         # (batch_size, num_tags)
             score = temp.sum(dim=1)                                  # (batch_size,)
         else:
-            score = torch.zeros((batch_size,))                       # (batch_size,)
+            score = torch.zeros((batch_size,), device=logits.device.type) # (batch_size,)
+
 
         # Add up the scores for the expected transitions and all
         # the inputs but the last
@@ -84,7 +87,6 @@ class WiserConditionalRandomField(ConditionalRandomField):
             score += temp * mask[i+1]
 
         # Transition from last state to "stop" state.
-
         # Computes score of transitioning to `stop_tag` from
         # each last token.
         if self.include_start_end_transitions:
