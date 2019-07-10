@@ -110,7 +110,6 @@ class WiserCrfTagger(CrfTagger):
         pairwise_marginals = kwargs.get('pairwise_marginals')
         vote_mask = kwargs.get('vote_mask')
 
-
         if unary_marginals is not None:
             ell = self.crf.expected_log_likelihood(logits=logits,
                                                 mask=mask,
