@@ -1,4 +1,3 @@
-
 from allennlp.models import CrfTagger
 from typing import Dict, Optional, List, Any
 from overrides import overrides

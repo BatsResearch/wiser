@@ -1,13 +1,8 @@
 from allennlp.data import Instance
 from allennlp.data.dataset_readers import DatasetReader
-from allennlp.data.fields import *
 from allennlp.data.token_indexers import TokenIndexer
-from allennlp.common.params import Params
 from typing import Iterator, Dict
-from . import CDRDiseaseDatasetReader
 import pickle
-import numpy as np
-import pdb
 
 @DatasetReader.register('weak_label')
 class WeakLabelDatasetReader(DatasetReader):

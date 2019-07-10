@@ -1,2 +1,0 @@
-from wiser.dataset_readers.cdr_reader import CDRDiseaseDatasetReader, CDRChemicalDatasetReader
-from wiser.dataset_readers.bioasq_reader import BioASQDatasetReader
