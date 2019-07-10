@@ -13,24 +13,6 @@ from wiser.modules.conditional_random_field import WiserConditionalRandomField
 import numpy as np
 from torch.nn.functional import log_softmax, softmax
 
-# Computes CE-Loss with respect to one-hot vector corresponding to the tag with highest probability
-def one_hot_cross_entropy_loss(logits, unary_marginals, num_tags):
-    loss = CrossEntropyLoss()
-    return loss(logits.view(-1, num_tags), unary_marginals.view(-1, num_tags).max(1)[1].long())
-
-# Computes CE-Loss with respect to the unary_marginal probability distribution
-def cross_entropy_loss(logits, unary_marginals, mask):
-    empirical_probs = softmax(logits, dim=-1).view(-1, 3)
-    target_probs = unary_marginals.view(-1, 3)
-    cross_entropies = -(target_probs * empirical_probs.log()).sum(1)
-
-    # Filters masked logits, and computes the average only among unmasked ones
-    return torch.dot(cross_entropies, mask.view(-1)) / mask.sum()
-
-def entropy(logits):
-    empirical_probs = softmax(logits, dim=-1)
-    return -(empirical_probs * empirical_probs.log()).sum(-1)
-
 @Model.register("wiser_crf_tagger")
 class WiserCrfTagger(CrfTagger):
 
