@@ -8,7 +8,6 @@ from tqdm.auto import tqdm
 from typing import Iterator, List, Dict
 from xml.etree import ElementTree
 
-
 class CDRDatasetReader(DatasetReader):
     """
     DatasetReader for CDR corpus available at
@@ -131,7 +130,7 @@ class CDRDatasetReader(DatasetReader):
             yield self.text_to_instance(doc_name, tokens, tags)
 
 
-@DatasetReader.register('cdr-disease')
+@DatasetReader.register('cdr_disease')
 class CDRDiseaseDatasetReader(CDRDatasetReader):
     """
     DatasetReader for CDR Disease corpus.
@@ -140,7 +139,7 @@ class CDRDiseaseDatasetReader(CDRDatasetReader):
         return self._cdr_read(file_path, 'Disease')
 
 
-@DatasetReader.register('cdr-chemical')
+@DatasetReader.register('cdr_chemical')
 class CDRChemicalDatasetReader(CDRDatasetReader):
     """
     DatasetReader for CDR Chemical corpus.
