@@ -1,12 +1,14 @@
 from allennlp.data import Instance
 from allennlp.data.dataset_readers import DatasetReader
-from allennlp.data.fields import TextField, SequenceLabelField
+from allennlp.data.fields import TextField, SequenceLabelField, MetadataField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
 from allennlp.data.tokenizers.word_tokenizer import SpacyWordSplitter, WordTokenizer
+from allennlp.data.tokenizers.sentence_splitter import SpacySentenceSplitter
 from tqdm.auto import tqdm
-from typing import Iterator, List, Dict
+from typing import Iterator, List, Dict, Tuple
 from xml.etree import ElementTree
+
 
 class CDRDatasetReader(DatasetReader):
     """
@@ -21,7 +23,8 @@ class CDRDatasetReader(DatasetReader):
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    def text_to_instance(self, doc_id: str, tokens: List[Token], tags: List[str] = None) -> Instance:
+    def text_to_instance(self, tokens: List[Token], tags: List[str] = None, sentence_spans: List[Tuple[int, int]]=None) -> Instance:
+
         tokens_field = TextField(tokens, self.token_indexers)
         fields = {"tokens": tokens_field}
 
@@ -29,7 +32,27 @@ class CDRDatasetReader(DatasetReader):
             tags_field = SequenceLabelField(labels=tags, sequence_field=tokens_field)
             fields["tags"] = tags_field
 
+        if sentence_spans:
+            fields['sentence_spans'] = MetadataField(sentence_spans)
+
         return Instance(fields)
+
+    # Returns true if current entity is different from previous entity
+    def _entity_is_different_from_previous_entity(self, ix, current_entity, i_tokens):
+        return ix > 0 and tags[ix-1] == 'I' and current_entity > 0
+                and i_tokens[current_entity][1] != i_tokens[current_entity-1][1]
+
+    def _is_i_tag(self, tokens, ix, current_entity, i_tokens):
+        return current_entity < len(i_tokens)
+                and str(tokens[ix]) == i_tokens[current_entity][0]
+
+    # Reformats text to ensure sound tokenizing
+    def _reformat_text(self, text):
+        replace_dict = {'.': ' . ', '-': ' - ', '/': ' / ', '=': ' = '}
+        for key, value in replace_dict.items():
+            text = text.replace(key, value)
+        return text
+
 
     def _read(self, file_path: str) -> Iterator[Instance]:
         raise NotImplementedError
@@ -37,9 +60,9 @@ class CDRDatasetReader(DatasetReader):
     def _cdr_read(self, file_path: str, entity_type: str) -> Iterator[Instance]:
         splitter = SpacyWordSplitter('en_core_web_sm', True, True, True)
         tokenizer = WordTokenizer(word_splitter=splitter)
+        splitter = SpacySentenceSplitter()
         root = ElementTree.parse(file_path).getroot()
         xml_docs = root.findall("./document")
-
         for xml_doc in tqdm(xml_docs):
             xml_title = xml_doc.find("passage[infon='title']")
             xml_abstract = xml_doc.find("passage[infon='abstract']")
@@ -47,7 +70,7 @@ class CDRDatasetReader(DatasetReader):
             doc_name = xml_doc.find('id').text
             title = xml_title.find('text').text
             abstract = xml_abstract.find('text').text
-            raw_text = title + " " + abstract
+            text = title + " " + abstract
 
             # Collects all annotations so that they can be sorted and processed
             annotations = []
@@ -66,69 +89,42 @@ class CDRDatasetReader(DatasetReader):
             # Sorts the annotations by start character
             annotations.sort(key=lambda x: int(x.find('location').get('offset')))
 
-            # Processes the annotations to build up a string with tokens that
-            # indicate starts and ends of spans
-            text = ""
-            last_end = 0
-            for annotation in annotations:
+            i_tokens = []
+            for span_id, annotation in enumerate(annotations):
                 start = int(annotation.find('location').get('offset'))
                 end = start + int(annotation.find('location').get('length'))
+                span_tokens = tokenizer.tokenize(self._reformat_text(text[start:end]))
+                i_tokens += [(str(token), span_id) for token in span_tokens]
 
-                # We use " /START/ " and " /END/ " so that they are passed
-                # through Spacy's tokenizer without being split
-                text = text + raw_text[last_end:start] + " /START/ " + \
-                    raw_text[start:end] + " /END/ "
-                last_end = end
-
-            # Puts the last end on
-            text = text + raw_text[last_end:]
-
-            initial_tokens = tokenizer.tokenize(text)
+            # # Splits the text into sentences, and tokenizes each sentence
+            sentences = splitter.split_sentences(self._reformat_text(text))
+            sentence_spans = []
+            sentence_start = 0
+            sentence_end = 0
             tokens = []
+            for sentence in sentences:
+                sentence_tokens = tokenizer.tokenize(sentence)
+
+                sentence_end = sentence_start + len(sentence_tokens) - 1
+                sentence_spans.append((sentence_start, sentence_end))
+                sentence_start = sentence_end + 1
+                tokens += sentence_tokens
+
             tags = []
-
-            # Iterates over all tokens and creates tag sequence
-
-            # 0 = no open span, 1 = next token is I, 2 = next token is B,
-            # 3 = last token was end, so we don't yet know next token's label
-            open_tag = 0
-            for token in initial_tokens:
-                # If the token is the start of a disease span, start a new tag sequence
-                if str(token) == "/START/" and open_tag == 0:
-                    open_tag = 1
-                elif str(token) == "/START/" and open_tag == 3:
-                    open_tag = 2
-                elif str(token) == "/END/":
-                    open_tag = 3
-                elif open_tag == 0:
-                    tokens.append(token)
-                    tags.append("O")
-                elif open_tag == 1:
-                    tokens.append(token)
-                    tags.append("I")
-                elif open_tag == 2:
-                    tokens.append(token)
-                    tags.append("B")
-                    open_tag = 1
-                elif open_tag == 3:
-                    tokens.append(token)
-                    tags.append("O")
-                    open_tag = 0
+            current_entity = 0
+            for ix, token in enumerate(tokens):
+                if self._is_i_tag(self, tokens, ix, current_entity, i_tokens):
+                    if self._entity_is_different_from_previous_entity(current_entity, i_tokens):
+                        tags.append('B')
+                    else:
+                        tags.append('I')
+                    current_entity += 1
                 else:
-                    raise RuntimeError("Unexpected state.")
+                    tags.append('O')
 
-            # We remove the indices because they are incorrect due to the
-            # removal of the /START/ and /END/ tags
-            tokens = [Token(token.text,
-                            None,
-                            token.lemma_,
-                            token.pos_,
-                            token.tag_,
-                            token.dep_,
-                            token.ent_type_) for token in tokens]
+            assert current_entity == len(i_tokens)
 
-            yield self.text_to_instance(doc_name, tokens, tags)
-
+            yield self.text_to_instance(tokens, tags, sentence_spans)
 
 @DatasetReader.register('cdr_disease')
 class CDRDiseaseDatasetReader(CDRDatasetReader):
