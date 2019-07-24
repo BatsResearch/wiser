@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 from typing import Iterator, List, Dict, Tuple
 from xml.etree import ElementTree
 
+
 class CDRDatasetReader(DatasetReader):
     """
     DatasetReader for CDR corpus available at
@@ -37,11 +38,20 @@ class CDRDatasetReader(DatasetReader):
         return Instance(fields)
 
     # Returns true if current entity is different from previous entity
-    def _entity_is_different_from_previous_entity(self, ix, current_entity, i_tokens, tags):
-        return ix > 0 and tags[ix-1] == 'I' and current_entity > 0 and i_tokens[current_entity][1] != i_tokens[current_entity-1][1]
+    def _entity_is_different_from_previous_entity(self, ix, current_entity, i_tokens):
+        return ix > 0 and tags[ix-1] == 'I' and current_entity > 0
+                and i_tokens[current_entity][1] != i_tokens[current_entity-1][1]
 
     def _is_i_tag(self, tokens, ix, current_entity, i_tokens):
-        return current_entity < len(i_tokens) and str(tokens[ix]) == i_tokens[current_entity][0]
+        return current_entity < len(i_tokens)
+                and str(tokens[ix]) == i_tokens[current_entity][0]
+
+    # Reformats text to ensure sound tokenizing
+    def _reformat_text(self, text):
+        replace_dict = {'.': ' . ', '-': ' - ', '/': ' / ', '=': ' = '}
+        for key, value in replace_dict.items():
+            text = text.replace(key, value)
+        return text
 
 
     def _read(self, file_path: str) -> Iterator[Instance]:
@@ -60,7 +70,7 @@ class CDRDatasetReader(DatasetReader):
             doc_name = xml_doc.find('id').text
             title = xml_title.find('text').text
             abstract = xml_abstract.find('text').text
-            raw_text = title + " " + abstract
+            text = title + " " + abstract
 
             # Collects all annotations so that they can be sorted and processed
             annotations = []
@@ -79,51 +89,40 @@ class CDRDatasetReader(DatasetReader):
             # Sorts the annotations by start character
             annotations.sort(key=lambda x: int(x.find('location').get('offset')))
 
-            text = ''
-            last_end = 0
             i_tokens = []
-            for annotation in annotations:
+            for span_id, annotation in enumerate(annotations):
                 start = int(annotation.find('location').get('offset'))
                 end = start + int(annotation.find('location').get('length'))
-                annotation_id = int(annotation.attrib['id'])
-                tag_span = raw_text[start:end]
-                text += raw_text[last_end:start] + " /START/ " + tag_span + " /END/ "
-                last_end = end
-                i_tokens += [(str(token), annotation_id) for token in tokenizer.tokenize(tag_span)]
-
-            text += raw_text[last_end:]
+                span_tokens = tokenizer.tokenize(self._reformat_text(text[start:end]))
+                i_tokens += [(str(token), span_id) for token in span_tokens]
 
             # # Splits the text into sentences, and tokenizes each sentence
-            sentences = splitter.split_sentences(text)
+            sentences = splitter.split_sentences(self._reformat_text(text))
             sentence_spans = []
             sentence_start = 0
             sentence_end = 0
             tokens = []
             for sentence in sentences:
                 sentence_tokens = tokenizer.tokenize(sentence)
+
                 sentence_end = sentence_start + len(sentence_tokens) - 1
                 sentence_spans.append((sentence_start, sentence_end))
                 sentence_start = sentence_end + 1
                 tokens += sentence_tokens
 
-            tokens = list(filter(lambda a: str(a) != '/START/' and str(a) != '/END/',  tokens))
             tags = []
             current_entity = 0
-
-
             for ix, token in enumerate(tokens):
-                if self._is_i_tag(tokens, ix, current_entity, i_tokens):
-                    if self._entity_is_different_from_previous_entity(ix, current_entity, i_tokens, tags):
+                if self._is_i_tag(self, tokens, ix, current_entity, i_tokens):
+                    if self._entity_is_different_from_previous_entity(current_entity, i_tokens):
                         tags.append('B')
                     else:
                         tags.append('I')
                     current_entity += 1
                 else:
                     tags.append('O')
-            # import pdb; pdb.set_trace()
 
             assert current_entity == len(i_tokens)
-            assert len(tags) == len(tokens)
 
             yield self.text_to_instance(tokens, tags, sentence_spans)
 
