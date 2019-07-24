@@ -18,7 +18,7 @@ def get_marginals(i, num_tokens, unary_marginals, pairwise_marginals):
         unary_marginals_list.append(unary_marginals[i])
 
         if pairwise_marginals is not None:
-            pairwise_marginals_list.append(pairwise_marginals)
+            pairwise_marginals_list.append(pairwise_marginals[i])
         i += 1
 
     if pairwise_marginals is not None:
@@ -27,6 +27,7 @@ def get_marginals(i, num_tokens, unary_marginals, pairwise_marginals):
     return [unary_marginals_list, pairwise_marginals_list, i]
 
 def save_label_distribution(save_path, data, unary_marginals=None, pairwise_marginals=None, save_tags=True):
+    
     instances = []
     i = 0
 

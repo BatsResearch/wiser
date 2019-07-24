@@ -12,6 +12,10 @@ import allennlp.nn.util as util
 from wiser.modules.conditional_random_field import WiserConditionalRandomField
 import numpy as np
 from torch.nn.functional import log_softmax, softmax
+from torch.nn import CrossEntropyLoss, MSELoss, KLDivLoss
+import pdb
+from wiser.modules.marginalized_conditional_random_field import WiserMarginalizedConditionalRandomField
+
 
 @Model.register("wiser_crf_tagger")
 class WiserCrfTagger(CrfTagger):
@@ -24,7 +28,7 @@ class WiserCrfTagger(CrfTagger):
                  label_encoding: Optional[str] = None,
                  include_start_end_transitions: bool = True,
                  constrain_crf_decoding: bool = None,
-                 calculate_span_f1: bool = None,
+                 calculate_span_f1: bool = True,
                  dropout: Optional[float] = None,
                  verbose_metrics: bool = False,
                  initializer: InitializerApplicator = InitializerApplicator(),
@@ -35,6 +39,7 @@ class WiserCrfTagger(CrfTagger):
                          include_start_end_transitions, constrain_crf_decoding, calculate_span_f1,
                          dropout, verbose_metrics, initializer, regularizer)
 
+        self.count = 0
         # Gets the kwargs needs to initialize the WISER CRF. We skip some
         # configuration checks that are checked in the super constructor
         if constrain_crf_decoding:
@@ -45,6 +50,10 @@ class WiserCrfTagger(CrfTagger):
             constraints = None
 
         # Replaces the CRF created by the super constructor with the WISER CRF
+        # self.crf = WiserMarginalizedConditionalRandomField(
+        #     self.num_tags, constraints,
+        #     include_start_end_transitions=include_start_end_transitions
+        # )
         self.crf = WiserConditionalRandomField(
             self.num_tags, constraints,
             include_start_end_transitions=include_start_end_transitions
@@ -55,6 +64,7 @@ class WiserCrfTagger(CrfTagger):
     def forward(self,  # type: ignore
                 tokens: Dict[str, torch.LongTensor],
                 tags: torch.LongTensor = None,
+                labels: torch.LongTensor = None,
                 metadata: List[Dict[str, Any]] = None,
                 # pylint: disable=unused-argument
                 **kwargs) -> Dict[str, torch.Tensor]:
@@ -82,27 +92,40 @@ class WiserCrfTagger(CrfTagger):
 
         logits = self.tag_projection_layer(encoded_text)
         best_paths = self.crf.viterbi_tags(logits, mask)
-        predicted_tags = [x for x, y in best_paths]
-        batch_size, seq_len, num_tags = logits.size()
 
-        # Just get the tags and ignore the score.
+        # Just get the tags and ignore the score
+        predicted_tags = [x for x, y in best_paths]
         output = {"logits": logits, "mask": mask, "tags": predicted_tags}
 
-        unary_marginals = kwargs.get('unary_marginals')
-        pairwise_marginals = kwargs.get('pairwise_marginals')
-        vote_mask = kwargs.get('vote_mask')
+        # unary_marginals = kwargs.get('unary_marginals')
+        # pairwise_marginals = kwargs.get('pairwise_marginals')
+        # vote_mask = kwargs.get('vote_mask').long()
 
-        if unary_marginals is not None:
-            ell = self.crf.expected_log_likelihood(logits=logits,
-                                                mask=mask,
-                                                unary_marginals=unary_marginals,
-                                                pairwise_marginals=pairwise_marginals)
-            output["loss"] = -ell
+
+        # if unary_marginals is not None:
+        #     ell = self.crf.expected_log_likelihood(
+        #                                         logits=logits,
+        #                                         mask=mask,
+        #                                         unary_marginals=unary_marginals,
+        #                                         pairwise_marginals=pairwise_marginals)
+
+
+            # indices, values = unary_marginals.max(-1)
+            # ell = self.crf.marginal_log_likelihood(logits=logits,
+            #                                         tags=values,
+            #                                         mask=mask,
+            #                                         marginal_mask=vote_mask)
+            # output["loss"] = -ell
+
+        tags = labels
+
+        log_likelihood = self.crf(logits, tags, mask)
+        output['loss'] = -log_likelihood
 
         if tags is not None:
-            if unary_marginals is None:
-                log_likelihood = self.crf(logits, tags, mask)
-                output['loss'] = -log_likelihood
+            # if unary_marginals is None:
+            #     log_likelihood = self.crf(logits, tags, mask)
+            #     output['loss'] = -log_likelihood
 
             # Represent viterbi tags as "class probabilities" that we can
             # feed into the metrics
@@ -110,8 +133,10 @@ class WiserCrfTagger(CrfTagger):
             for i, instance_tags in enumerate(predicted_tags):
                 for j, tag_id in enumerate(instance_tags):
                     class_probabilities[i, j, tag_id] = 1
+
             for metric in self.metrics.values():
                 metric(class_probabilities, tags, mask.float())
+
             if self.calculate_span_f1:
                 self._f1_metric(class_probabilities, tags, mask.float())
 

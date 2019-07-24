@@ -8,7 +8,9 @@ from allennlp.data.tokenizers.sentence_splitter import SpacySentenceSplitter
 from tqdm.auto import tqdm
 from typing import Iterator, List, Dict, Tuple
 from xml.etree import ElementTree
+import pdb
 
+@DatasetReader.register('cdr')
 class CDRDatasetReader(DatasetReader):
     """
     DatasetReader for CDR corpus available at
@@ -43,11 +45,7 @@ class CDRDatasetReader(DatasetReader):
     def _is_i_tag(self, tokens, ix, current_entity, i_tokens):
         return current_entity < len(i_tokens) and str(tokens[ix]) == i_tokens[current_entity][0]
 
-
     def _read(self, file_path: str) -> Iterator[Instance]:
-        raise NotImplementedError
-
-    def _cdr_read(self, file_path: str, entity_type: str) -> Iterator[Instance]:
         splitter = SpacyWordSplitter('en_core_web_sm', True, True, True)
         tokenizer = WordTokenizer(word_splitter=splitter)
         splitter = SpacySentenceSplitter()
@@ -65,8 +63,11 @@ class CDRDatasetReader(DatasetReader):
             # Collects all annotations so that they can be sorted and processed
             annotations = []
             for xml in (xml_title, xml_abstract):
-                xml_annotations = xml.findall("annotation[infon='" + entity_type + "']")
-                for annotation in xml_annotations:
+
+                disease_annotations = xml.findall("annotation[infon='Disease']")
+                chemical_annotations = xml.findall("annotation[infon='Chemical']")
+
+                for annotation in disease_annotations:
                     # Skips IndividualMentions, since they are subsumed by
                     # CompositeMentions
                     keep = True
@@ -74,22 +75,35 @@ class CDRDatasetReader(DatasetReader):
                         if infon.text == 'IndividualMention':
                             keep = False
                     if keep:
-                        annotations.append(annotation)
+                        annotations.append((annotation, 'Disease'))
+
+                for annotation in chemical_annotations:
+                    # Skips IndividualMentions, since they are subsumed by
+                    # CompositeMentions
+                    keep = True
+                    for infon in annotation.findall('infon'):
+                        if infon.text == 'IndividualMention':
+                            keep = False
+                    if keep:
+                        annotations.append((annotation, 'Chemical'))
 
             # Sorts the annotations by start character
-            annotations.sort(key=lambda x: int(x.find('location').get('offset')))
+            annotations.sort(key=lambda x: int(x[0].find('location').get('offset')))
 
             text = ''
             last_end = 0
             i_tokens = []
+            entities = []
             for annotation in annotations:
-                start = int(annotation.find('location').get('offset'))
-                end = start + int(annotation.find('location').get('length'))
-                annotation_id = int(annotation.attrib['id'])
+                span = annotation[0]
+                start = int(span.find('location').get('offset'))
+                end = start + int(span.find('location').get('length'))
+                annotation_id = int(span.attrib['id'])
                 tag_span = raw_text[start:end]
                 text += raw_text[last_end:start] + " /START/ " + tag_span + " /END/ "
                 last_end = end
                 i_tokens += [(str(token), annotation_id) for token in tokenizer.tokenize(tag_span)]
+                entities.append(annotation[1])
 
             text += raw_text[last_end:]
 
@@ -107,10 +121,9 @@ class CDRDatasetReader(DatasetReader):
                 tokens += sentence_tokens
 
             tokens = list(filter(lambda a: str(a) != '/START/' and str(a) != '/END/',  tokens))
+            pdb.set_trace()
             tags = []
             current_entity = 0
-
-
             for ix, token in enumerate(tokens):
                 if self._is_i_tag(tokens, ix, current_entity, i_tokens):
                     if self._entity_is_different_from_previous_entity(ix, current_entity, i_tokens, tags):
@@ -120,26 +133,8 @@ class CDRDatasetReader(DatasetReader):
                     current_entity += 1
                 else:
                     tags.append('O')
-            # import pdb; pdb.set_trace()
 
             assert current_entity == len(i_tokens)
             assert len(tags) == len(tokens)
 
             yield self.text_to_instance(tokens, tags, sentence_spans)
-
-@DatasetReader.register('cdr_disease')
-class CDRDiseaseDatasetReader(CDRDatasetReader):
-    """
-    DatasetReader for CDR Disease corpus.
-    """
-    def _read(self, file_path: str) -> Iterator[Instance]:
-        return self._cdr_read(file_path, 'Disease')
-
-
-@DatasetReader.register('cdr_chemical')
-class CDRChemicalDatasetReader(CDRDatasetReader):
-    """
-    DatasetReader for CDR Chemical corpus.
-    """
-    def _read(self, file_path: str) -> Iterator[Instance]:
-        return self._cdr_read(file_path, 'Chemical')
