@@ -1,6 +1,7 @@
 import torch
 from allennlp.modules.conditional_random_field import ConditionalRandomField
 
+
 class WiserConditionalRandomField(ConditionalRandomField):
     def expected_log_likelihood(
             self,
@@ -60,7 +61,6 @@ class WiserConditionalRandomField(ConditionalRandomField):
                     temp = torch.ger(temp1, temp2)
                     pairwise_marginals[i, j, :, :] = temp
 
-
         # Start with the transition scores from start_tag to the
         # first tag in each input
         if self.include_start_end_transitions:
@@ -69,7 +69,6 @@ class WiserConditionalRandomField(ConditionalRandomField):
             score = temp.sum(dim=1)                                  # (batch_size,)
         else:
             score = torch.zeros((batch_size,), device=logits.device.type) # (batch_size,)
-
 
         # Add up the scores for the expected transitions and all
         # the inputs but the last

@@ -10,8 +10,7 @@ from allennlp.models.model import Model
 from allennlp.nn import InitializerApplicator, RegularizerApplicator
 import allennlp.nn.util as util
 from wiser.modules.conditional_random_field import WiserConditionalRandomField
-import numpy as np
-from torch.nn.functional import log_softmax, softmax
+
 
 @Model.register("wiser_crf_tagger")
 class WiserCrfTagger(CrfTagger):
@@ -49,7 +48,6 @@ class WiserCrfTagger(CrfTagger):
             self.num_tags, constraints,
             include_start_end_transitions=include_start_end_transitions
         )
-
 
     @overrides
     def forward(self,  # type: ignore

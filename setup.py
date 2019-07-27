@@ -10,6 +10,9 @@ setup(
     			'framework for programming sequence tagging neural networks for named ' +
     			'entity recognition',
     packages=find_packages(),
+    package_data={
+        '': ['viewer/*.html', 'viewer/*.js'],
+    },
     install_requires=['allennlp==0.8.4', 'labelmodels'],
     dependency_links=[
         'git+https://github.com/BatsResearch/labelmodels.git'
