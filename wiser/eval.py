@@ -89,6 +89,41 @@ def score_labeling_functions(instances, gold_label_key='tags'):
     return results
 
 
+def score_linking_functions(instances, gold_label_keys='tags'):
+    lf_scores = {}
+    for instance in instances:
+        for lf_name, predictions in instance['WISER_LINKS'].items():
+            if lf_name not in lf_scores:
+                # Initializes counts for correct entity links, correct
+                # non-entity links, and incorrect links
+                lf_scores[lf_name] = [0, 0, 0]
+
+            for i in range(1, len(predictions)):
+                if predictions[i] == 1:
+                    entity0 = instance[gold_label_keys][i-1][0] == 'I'
+                    entity0 = entity0 or instance[gold_label_keys][i-1][0] == 'B'
+
+                    entity1 = instance[gold_label_keys][i][0] == 'I'
+                    entity1 = entity1 or instance[gold_label_keys][i][0] == 'B'
+
+                    if entity0 and entity1:
+                        lf_scores[lf_name][0] += 1
+                    elif not entity0 and not entity1:
+                        lf_scores[lf_name][1] += 1
+                    else:
+                        lf_scores[lf_name][2] += 1
+
+    for counts in lf_scores.values():
+        counts.append(round(
+            (counts[0] + counts[1]) / (counts[0] + counts[1] + counts[2]), ndigits=4))
+
+    # Collects results into a dataframe
+    column_names = ["Entity Links", "Non-Entity Links", "Incorrect Links", "Accuracy"]
+    results = pd.DataFrame.from_dict(lf_scores, orient="index", columns=column_names)
+    results = pd.DataFrame.sort_index(results)
+    return results
+
+
 def get_mv_label_distribution(instances, label_to_ix, treat_tie_as):
     distribution = []
     for instance in instances:

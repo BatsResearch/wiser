@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 from typing import Iterator, List, Dict
 from xml.etree import ElementTree
 
+
 class CDRDatasetReader(DatasetReader):
     """
     DatasetReader for CDR corpus available at

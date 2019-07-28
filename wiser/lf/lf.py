@@ -30,8 +30,9 @@ class LinkingFunction(LabelingFunction):
 
 
 class DictionaryMatcher(LabelingFunction):
-    def __init__(self, name, terms, match_lemmas=False, i_label="I", abs_label="ABS"):
+    def __init__(self, name, terms, uncased=False, match_lemmas=False, i_label="I", abs_label="ABS"):
         self.name = name
+        self.uncased = uncased
         self.match_lemmas = match_lemmas
         self.i_label = i_label
         self.abs_label = abs_label
@@ -67,32 +68,29 @@ class DictionaryMatcher(LabelingFunction):
 
         # Additionally checks lemmas if requested. This will not overwrite
         # existing votes
-        #try:
-            if self.match_lemmas:
-                tokens = self._normalize_instance_tokens(instance['tokens'], lemmas=True)
-                i = 0
-                while i < len(tokens):
-                    if tokens[i] in self.term_dict:
-                        candidates = self.term_dict[tokens[i]]
-                        for c in candidates:
-                            # Checks whether normalized AllenNLP tokens equal the list
-                            # of string tokens defining the term in the dictionary
-                            if i + len(c) <= len(tokens):
-                                equal = True
-                                for j in range(len(c)):
-                                    if tokens[i + j] != c[j] or labels[i + j] != self.abs_label:
-                                        equal = False
-                                        break
-
-                                # If tokens match, labels the instance tokens using map
-                                if equal:
-                                    for j in range(i, i + len(c)):
-                                        labels[j] = self.i_label
-                                    i = i + len(c) - 1
+        if self.match_lemmas:
+            tokens = self._normalize_instance_tokens(instance['tokens'], lemmas=True)
+            i = 0
+            while i < len(tokens):
+                if tokens[i] in self.term_dict:
+                    candidates = self.term_dict[tokens[i]]
+                    for c in candidates:
+                        # Checks whether normalized AllenNLP tokens equal the list
+                        # of string tokens defining the term in the dictionary
+                        if i + len(c) <= len(tokens):
+                            equal = True
+                            for j in range(len(c)):
+                                if tokens[i + j] != c[j] or labels[i + j] != self.abs_label:
+                                    equal = False
                                     break
-                    i += 1
-        #except AttributeError:
-        #    pass
+
+                            # If tokens match, labels the instance tokens using map
+                            if equal:
+                                for j in range(i, i + len(c)):
+                                    labels[j] = self.i_label
+                                i = i + len(c) - 1
+                                break
+                i += 1
 
         return labels
 
@@ -104,9 +102,15 @@ class DictionaryMatcher(LabelingFunction):
             normalized_tokens = [token.lemma_ for token in tokens]
         else:
             normalized_tokens = [token.text for token in tokens]
+
+        if self.uncased:
+            normalized_tokens = [token.lower() for token in normalized_tokens]
+
         return normalized_tokens
 
     def _normalize_terms(self, tokens):
+        if self.uncased:
+            return [token.lower() for token in tokens]
         return tokens
 
     def _load_terms(self, terms):
