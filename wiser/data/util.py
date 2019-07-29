@@ -27,9 +27,9 @@ def get_marginals(i, num_tokens, unary_marginals, pairwise_marginals):
     return [unary_marginals_list, pairwise_marginals_list, i]
 
 def save_label_distribution(save_path, data, unary_marginals=None, pairwise_marginals=None, save_tags=True):
-    instances = []
+    
     i = 0
-
+    instances = []
     for instance in data:
         instance_tokens = instance['tokens']
         fields = {'tokens': instance_tokens}
