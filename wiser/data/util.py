@@ -40,7 +40,7 @@ def get_complete_unary_marginals(unary_marginals, gen_label_to_ix, disc_label_to
 def get_complete_pairwise_marginals(pairwise_marginals, gen_label_to_ix, disc_label_to_ix):
 
     if pairwise_marginals is None or gen_label_to_ix is None or disc_label_to_ix is None:
-        return unary_marginals
+        return pairwise_marginals
 
     new_pairwise = np.zeros((len(pairwise_marginals), len(disc_label_to_ix), len(disc_label_to_ix)))
 
