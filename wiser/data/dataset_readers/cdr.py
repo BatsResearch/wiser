@@ -28,7 +28,7 @@ class CDRDatasetReader(DatasetReader):
     calling _cdr_read with a second argument that is the name of the entity type
     to include in the data set.
     """
-    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_special_cases: bool = True, use_regex: bool = True) -> None:
+    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_regex: bool = True) -> None:
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
@@ -43,27 +43,6 @@ class CDRDatasetReader(DatasetReader):
                                         suffix_search=suffix_re.search,
                                         infix_finditer=infix_re.finditer,
                                         token_match=self.nlp.tokenizer.token_match)
-
-        if use_special_cases:
-            special_cases = []
-            special_cases.append(['-', 'Tacrolimus'])
-            special_cases.append(['(', '5-HT', '6', ')'])
-            special_cases.append(['5-HT', '6'])
-            special_cases.append(['Na', '-', 'K', '-', '2', 'Cl'])
-            special_cases.append(['Na', '(+)', '-', 'K', '(+)', '-', '2', 'Cl', '(-)'])
-            special_cases.append(['5', '-', 'hydroxytryptamine', '1a'])
-            special_cases.append(['acid', 'A'])
-            special_cases.append(['Na', '-', 'K', '-', '2', 'Cl'])
-            special_cases.append(['(', 'DA', '1', ')'])
-            special_cases.append(['(', 'DA', '2', ')'])
-            special_cases.append(['Ca', '2', '+'])
-            special_cases.append(['glucose', '.4', '.'])
-            special_cases.append(['adrenaline', '.7', '.'])
-            special_cases.append(['myoglobinuria', '.', '(', 'ABSTRACT'])
-
-            for case in special_cases:
-                self.nlp.tokenizer.add_special_case(''.join(case), [{ORTH: t} for t in case])
-
 
     def get_tokenizer(self):
         return self.nlp.tokenizer
