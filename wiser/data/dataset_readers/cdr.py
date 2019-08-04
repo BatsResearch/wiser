@@ -19,6 +19,7 @@ import re
 from collections import deque
 from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
+
 class CDRDatasetReader(DatasetReader):
     """
     DatasetReader for CDR corpus available at
@@ -73,7 +74,7 @@ class CDRDatasetReader(DatasetReader):
 
             title = xml_title.find('text').text
             abstract = xml_abstract.find('text').text
-            text = title + " " + abstract
+            raw_text = title + " " + abstract
 
             doc = self.nlp(raw_text)
             sentences = [sent for sent in doc.sents]
@@ -127,6 +128,7 @@ class CDRDatasetReader(DatasetReader):
                 token.dep_,
                 token.ent_type_) for sentence in sentences for token in sentence]
 
+            yield self.text_to_instance(tokens, tags, sentence_spans)
 
 @DatasetReader.register('cdr')
 class CDRCombinedDatasetReader(CDRDatasetReader):
