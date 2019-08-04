@@ -1,13 +1,23 @@
 from allennlp.data import Instance
 from allennlp.data.dataset_readers import DatasetReader
-from allennlp.data.fields import TextField, SequenceLabelField
+from allennlp.data.fields import TextField, SequenceLabelField, MetadataField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
 from allennlp.data.tokenizers.word_tokenizer import SpacyWordSplitter, WordTokenizer
+from allennlp.data.tokenizers.sentence_splitter import SpacySentenceSplitter
 from tqdm.auto import tqdm
-from typing import Iterator, List, Dict
+from typing import Iterator, List, Dict, Tuple
 from xml.etree import ElementTree
-
+from spacy.lang.en import English
+import spacy
+import numpy as np
+from spacy.matcher import Matcher, PhraseMatcher
+from spacy.tokens import Span
+from spacy.tokenizer import Tokenizer
+from spacy.symbols import ORTH
+import re
+from collections import deque
+from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
 class CDRDatasetReader(DatasetReader):
     """
@@ -18,11 +28,27 @@ class CDRDatasetReader(DatasetReader):
     calling _cdr_read with a second argument that is the name of the entity type
     to include in the data set.
     """
-    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None) -> None:
+    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_regex: bool = True) -> None:
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    def text_to_instance(self, doc_id: str, tokens: List[Token], tags: List[str] = None) -> Instance:
+        self.nlp = spacy.load('en_core_web_sm')
+
+        if use_regex:
+            infix_re = compile_infix_regex(self.nlp.Defaults.infixes + tuple(r'-') + tuple(r'[/+=\(\)\[\]]'))
+            prefix_re = compile_prefix_regex(self.nlp.Defaults.prefixes + tuple(r'[\'\(\[]'))
+            suffix_re = compile_suffix_regex(self.nlp.Defaults.suffixes + tuple(r'[\.\+\)\]]'))
+
+            self.nlp.tokenizer =  Tokenizer(self.nlp.vocab, prefix_search=prefix_re.search,
+                                        suffix_search=suffix_re.search,
+                                        infix_finditer=infix_re.finditer,
+                                        token_match=self.nlp.tokenizer.token_match)
+
+    def get_tokenizer(self):
+        return self.nlp.tokenizer
+
+    def text_to_instance(self, tokens: List[Token], tags: List[str] = None, sentence_spans: List[Tuple[int, int]]=None) -> Instance:
+
         tokens_field = TextField(tokens, self.token_indexers)
         fields = {"tokens": tokens_field}
 
@@ -30,106 +56,85 @@ class CDRDatasetReader(DatasetReader):
             tags_field = SequenceLabelField(labels=tags, sequence_field=tokens_field)
             fields["tags"] = tags_field
 
+        if sentence_spans:
+            fields['sentence_spans'] = MetadataField(sentence_spans)
+
         return Instance(fields)
 
     def _read(self, file_path: str) -> Iterator[Instance]:
         raise NotImplementedError
 
-    def _cdr_read(self, file_path: str, entity_type: str) -> Iterator[Instance]:
-        splitter = SpacyWordSplitter('en_core_web_sm', True, True, True)
-        tokenizer = WordTokenizer(word_splitter=splitter)
+    def _cdr_read(self, file_path: str, entity_types: List[str]) -> Iterator[Instance]:
         root = ElementTree.parse(file_path).getroot()
         xml_docs = root.findall("./document")
-
         for xml_doc in tqdm(xml_docs):
             xml_title = xml_doc.find("passage[infon='title']")
             xml_abstract = xml_doc.find("passage[infon='abstract']")
 
-            doc_name = xml_doc.find('id').text
             title = xml_title.find('text').text
             abstract = xml_abstract.find('text').text
-            raw_text = title + " " + abstract
+            text = title + " " + abstract
 
-            # Collects all annotations so that they can be sorted and processed
-            annotations = []
-            for xml in (xml_title, xml_abstract):
-                xml_annotations = xml.findall("annotation[infon='" + entity_type + "']")
+            doc = self.nlp(raw_text)
+            sentences = [sent for sent in doc.sents]
+            tokens = [token for sentence in sentences for token in sentence]
+            sentence_spans = [(sent.start, sent.end) for sent in sentences]
+
+            tags = ['O'] * len(tokens)
+            for entity_type in entity_types:
+
+                i_tag = 'I-%s' % (entity_type)
+                b_tag = 'B-%s' % (entity_type)
+
+                xml_annotations = []
+                for xml in (xml_title, xml_abstract):
+                    annotations = xml.findall("annotation[infon='" + entity_type + "']")
+                    xml_annotations += annotations
+
+                xml_annotations.sort(key=lambda x: int(x.find('location').get('offset')))
+
                 for annotation in xml_annotations:
                     # Skips IndividualMentions, since they are subsumed by
                     # CompositeMentions
-                    keep = True
-                    for infon in annotation.findall('infon'):
-                        if infon.text == 'IndividualMention':
-                            keep = False
-                    if keep:
-                        annotations.append(annotation)
+                    if 'IndividualMention' not in [a.text for a in annotation.findall('infon')]:
+                        start = int(annotation.find('location').get('offset'))
+                        end = start + int(annotation.find('location').get('length'))
+                        entity_span = doc.char_span(start, end)
 
-            # Sorts the annotations by start character
-            annotations.sort(key=lambda x: int(x.find('location').get('offset')))
+                        if entity_span is None:
+                            start = raw_text.rfind(' ', 0, start) + 1
+                            end = raw_text.find(' ', end)
+                            start = start if start != -1 else 0
+                            end = end if end != -1 else len(raw_text)
 
-            # Processes the annotations to build up a string with tokens that
-            # indicate starts and ends of spans
-            text = ""
-            last_end = 0
-            for annotation in annotations:
-                start = int(annotation.find('location').get('offset'))
-                end = start + int(annotation.find('location').get('length'))
+                            entity_span = doc.char_span(start, end)
 
-                # We use " /START/ " and " /END/ " so that they are passed
-                # through Spacy's tokenizer without being split
-                text = text + raw_text[last_end:start] + " /START/ " + \
-                    raw_text[start:end] + " /END/ "
-                last_end = end
+                        entity_start = entity_span.start
+                        entity_end = entity_span.end
 
-            # Puts the last end on
-            text = text + raw_text[last_end:]
+                        if entity_start > 0 and tags[entity_start-1] != 'O':
+                            tags[entity_start] = b_tag
+                        else:
+                            tags[entity_start] = i_tag
 
-            initial_tokens = tokenizer.tokenize(text)
-            tokens = []
-            tags = []
+                        tags[entity_start+1:entity_end] = [i_tag] * (len(entity_span)-1)
 
-            # Iterates over all tokens and creates tag sequence
-
-            # 0 = no open span, 1 = next token is I, 2 = next token is B,
-            # 3 = last token was end, so we don't yet know next token's label
-            open_tag = 0
-            for token in initial_tokens:
-                # If the token is the start of a disease span, start a new tag sequence
-                if str(token) == "/START/" and open_tag == 0:
-                    open_tag = 1
-                elif str(token) == "/START/" and open_tag == 3:
-                    open_tag = 2
-                elif str(token) == "/END/":
-                    open_tag = 3
-                elif open_tag == 0:
-                    tokens.append(token)
-                    tags.append("O")
-                elif open_tag == 1:
-                    tokens.append(token)
-                    tags.append("I")
-                elif open_tag == 2:
-                    tokens.append(token)
-                    tags.append("B")
-                    open_tag = 1
-                elif open_tag == 3:
-                    tokens.append(token)
-                    tags.append("O")
-                    open_tag = 0
-                else:
-                    raise RuntimeError("Unexpected state.")
-
-            # We remove the indices because they are incorrect due to the
-            # removal of the /START/ and /END/ tags
             tokens = [Token(token.text,
-                            None,
-                            token.lemma_,
-                            token.pos_,
-                            token.tag_,
-                            token.dep_,
-                            token.ent_type_) for token in tokens]
+                token.idx,
+                token.lemma_,
+                token.pos_,
+                token.tag_,
+                token.dep_,
+                token.ent_type_) for sentence in sentences for token in sentence]
 
-            yield self.text_to_instance(doc_name, tokens, tags)
 
+@DatasetReader.register('cdr')
+class CDRCombinedDatasetReader(CDRDatasetReader):
+    """
+    DatasetReader for CDR Disease + Chemical corpus.
+    """
+    def _read(self, file_path: str) -> Iterator[Instance]:
+        return self._cdr_read(file_path, ['Disease', 'Chemical'])
 
 @DatasetReader.register('cdr_disease')
 class CDRDiseaseDatasetReader(CDRDatasetReader):
@@ -137,8 +142,7 @@ class CDRDiseaseDatasetReader(CDRDatasetReader):
     DatasetReader for CDR Disease corpus.
     """
     def _read(self, file_path: str) -> Iterator[Instance]:
-        return self._cdr_read(file_path, 'Disease')
-
+        return self._cdr_read(file_path, ['Disease'])
 
 @DatasetReader.register('cdr_chemical')
 class CDRChemicalDatasetReader(CDRDatasetReader):
@@ -146,4 +150,5 @@ class CDRChemicalDatasetReader(CDRDatasetReader):
     DatasetReader for CDR Chemical corpus.
     """
     def _read(self, file_path: str) -> Iterator[Instance]:
-        return self._cdr_read(file_path, 'Chemical')
+        return self._cdr_read(file_path, ['Chemical'])
+
