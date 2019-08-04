@@ -4,7 +4,7 @@ from allennlp.data.token_indexers import TokenIndexer
 from typing import Iterator, Dict
 from allennlp.data.fields import ArrayField, TextField, SequenceLabelField
 import pickle
-import numpy as np
+
 
 @DatasetReader.register('weak_label')
 class WeakLabelDatasetReader(DatasetReader):
@@ -34,8 +34,9 @@ class WeakLabelDatasetReader(DatasetReader):
         else:
             for instance in data:
                 if 'sentence_spans' not in instance:
-                    raise RuntimeError('No sentence spans detected in the dataset you\'re attempting to read. '
-                                        'Did you forget to generate them?')
+                    raise ValueError("No sentence spans detected in the dataset "
+                                     "you're attempting to read. "
+                                     "Did you forget to generate them?")
 
                 tokens_field = instance['tokens']
                 tags_field = instance['tags'] if 'tags' in instance else None
