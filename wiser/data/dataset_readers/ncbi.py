@@ -3,7 +3,9 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.fields import TextField, SequenceLabelField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
-from allennlp.data.tokenizers.word_tokenizer import SpacyWordSplitter, WordTokenizer
+import spacy
+from spacy.tokenizer import Tokenizer
+from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 from tqdm.auto import tqdm
 from typing import Iterator, List, Dict
 
@@ -18,9 +20,23 @@ class NCBIDiseaseDatasetReader(DatasetReader):
     the "mention level" corpus available at
     https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBI_corpus.zip
     """
-    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None) -> None:
+    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_regex: bool = True) -> None:
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
+
+        self.nlp = spacy.load('en_core_web_sm')
+
+        if use_regex:
+            infix_re = compile_infix_regex(self.nlp.Defaults.infixes + tuple(r'-') + tuple(r'[/+=\(\)\[\]]'))
+            prefix_re = compile_prefix_regex(self.nlp.Defaults.prefixes + tuple(r'[\'\(\[]'))
+            suffix_re = compile_suffix_regex(self.nlp.Defaults.suffixes + tuple(r'[\.\+\)\]]'))
+
+            self.nlp.tokenizer = Tokenizer(
+                self.nlp.vocab,
+                prefix_search=prefix_re.search,
+                suffix_search=suffix_re.search,
+                infix_finditer=infix_re.finditer,
+                token_match=self.nlp.tokenizer.token_match)
 
     def text_to_instance(self, doc_id: str, tokens: List[Token], tags: List[str] = None) -> Instance:
         tokens_field = TextField(tokens, self.token_indexers)
@@ -33,83 +49,61 @@ class NCBIDiseaseDatasetReader(DatasetReader):
         return Instance(fields)
 
     def _read(self, file_path: str) -> Iterator[Instance]:
-        splitter = SpacyWordSplitter('en_core_web_sm', True, True, True)
-        tokenizer = WordTokenizer(word_splitter=splitter)
-
         with open(file_path) as f:
-            for line_num, line in enumerate(tqdm(f.readlines())):
-                pieces = line.strip().split("\t")
-                doc_id = pieces[0]
-                title = pieces[1]
+            title, abstract = None, None
+            annotations = []
+            for line in tqdm(f.readlines()):
+                if line.strip() == '':
+                    if title is not None:
+                        doc = self.nlp(title + " " + abstract)
 
-                # Puts a space before the closing period to match tokenization of abstract
-                title = title[:-1] + " ."
-                abstract = pieces[2]
+                        # Sorts the annotations by start character
+                        annotations.sort(key=lambda x: int(x[0]))
 
-                text = title + " " + abstract
+                        tokens = [Token(token.text,
+                                        token.idx,
+                                        token.lemma_,
+                                        token.pos_,
+                                        token.tag_,
+                                        token.dep_,
+                                        token.ent_type_) for token in doc]
 
-                # Puts spaces around entity tags to ensure tokens are split correctly
-                text = text.replace("<category=\"", " <category=\"")
-                text = text.replace("\">", "\"> ")
-                text = text.replace("</category>", " </category> ")
+                        # Assigns tags based on annotations
+                        tags = []
+                        next = 0
+                        current = None
+                        for token in tokens:
+                            # Checks if the next annotation begins somewhere in this token
+                            start_entity = next < len(annotations)
+                            start_entity = start_entity and token.idx <= annotations[next][0]
+                            start_entity = start_entity and token.idx + len(token.text) > int(annotations[next][0])
 
-                initial_tokens = text.split()
-                second_tokens = []
+                            if start_entity:
+                                tags.append('I' if current is None else 'B')
+                                current = annotations[next]
+                                next += 1
+                            elif current is not None:
+                                if token.idx < int(current[1]):
+                                    tags.append('I')
+                                else:
+                                    tags.append('O')
+                                    current = None
+                            else:
+                                tags.append('O')
 
-                # Processes the annotations to build up a string with tokens that
-                # indicate starts and ends of spans
-                for token in initial_tokens:
-                    if token.startswith("<category="):
-                        second_tokens.append(" /START/ ")
-                    elif token == "</category>":
-                        second_tokens.append(" /END/ ")
-                    else:
-                        second_tokens.append(token)
+                        yield self.text_to_instance(doc_id, tokens, tags)
+                        title, abstract, doc = None, None, None
+                        annotations = []
+                    continue
 
-                # Creates new text to be parsed by Spacy
-                text = " ".join(second_tokens)
-                third_tokens = tokenizer.tokenize(text)
-
-                # Iterates over all tokens and creates tag sequence
-                tokens = []
-                tags = []
-
-                # 0 = no open span, 1 = next token is I, 2 = next token is B,
-                # 3 = last token was end, so we don't yet know next token's label
-                open_tag = 0
-                for token in third_tokens:
-                    # If the token is the start of a disease span, start a new tag sequence
-                    if token.text == "/START/" and open_tag == 0:
-                        open_tag = 1
-                    elif token.text == "/START/" and open_tag == 3:
-                        open_tag = 2
-                    elif token.text == "/END/":
-                        open_tag = 3
-                    elif open_tag == 0:
-                        tokens.append(token)
-                        tags.append("O")
-                    elif open_tag == 1:
-                        tokens.append(token)
-                        tags.append("I")
-                    elif open_tag == 2:
-                        tokens.append(token)
-                        tags.append("B")
-                        open_tag = 1
-                    elif open_tag == 3:
-                        tokens.append(token)
-                        tags.append("O")
-                        open_tag = 0
-                    else:
-                        raise RuntimeError("Unexpected state.")
-
-                # We remove the indices because they are incorrect due to the
-                # removal of the /START/ and /END/ tags
-                tokens = [Token(token.text,
-                                None,
-                                token.lemma_,
-                                token.pos_,
-                                token.tag_,
-                                token.dep_,
-                                token.ent_type_) for token in tokens]
-
-                yield self.text_to_instance(doc_id, tokens, tags)
+                if title is None:
+                    pieces = line.strip().split("|", 3)
+                    doc_id = pieces[0]
+                    title = pieces[2]
+                    continue
+                elif abstract is None:
+                    abstract = line.strip().split("|", 3)[2]
+                    continue
+                else:
+                    pieces = line.strip().split()
+                    annotations.append((int(pieces[1]), int(pieces[2])))

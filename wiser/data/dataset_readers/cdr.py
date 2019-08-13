@@ -3,21 +3,12 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.fields import TextField, SequenceLabelField, MetadataField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
-from allennlp.data.tokenizers.word_tokenizer import SpacyWordSplitter, WordTokenizer
-from allennlp.data.tokenizers.sentence_splitter import SpacySentenceSplitter
+import spacy
+from spacy.tokenizer import Tokenizer
+from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 from tqdm.auto import tqdm
 from typing import Iterator, List, Dict, Tuple
 from xml.etree import ElementTree
-from spacy.lang.en import English
-import spacy
-import numpy as np
-from spacy.matcher import Matcher, PhraseMatcher
-from spacy.tokens import Span
-from spacy.tokenizer import Tokenizer
-from spacy.symbols import ORTH
-import re
-from collections import deque
-from spacy.util import compile_prefix_regex, compile_infix_regex, compile_suffix_regex
 
 
 class CDRDatasetReader(DatasetReader):
