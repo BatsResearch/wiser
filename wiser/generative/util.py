@@ -101,7 +101,7 @@ def get_unweighted_training_labels(instance, label_to_ix, treat_tie_as):
                 maj_vote[i] = first
 
 
-def get_gen_model_inputs(instances, label_to_ix):
+def get_generative_model_inputs(instances, label_to_ix):
     label_name_to_col = {}
     link_name_to_col = {}
 
