@@ -63,16 +63,7 @@ def get_rules(data):
 
 def train_generative_model(model, train_data, dev_data, epochs,
                            label_to_ix, config):
-    train_inputs = get_generative_model_inputs(train_data, label_to_ix)
-    if type(model).__name__ == "NaiveBayes":
-        train_inputs = (train_inputs[0],)
-    elif type(model).__name__ == "HMM":
-        train_inputs = (train_inputs[0], train_inputs[2])
-    elif type(model).__name__ == "LinkedHMM":
-        pass
-    else:
-        raise ValueError("Unknown model type: %s" % str(type(model)))
-    config.epochs = 1
+    train_inputs = _clean_inputs(get_generative_model_inputs(train_data, label_to_ix), model)
 
     best_p = float('-inf')
     best_r = float('-inf')
@@ -96,12 +87,23 @@ def train_generative_model(model, train_data, dev_data, epochs,
 
 def evaluate_generative_model(model, data, label_to_ix):
 
+    inputs = _clean_inputs(get_generative_model_inputs(data, label_to_ix), model)
     ix_to_label = dict(map(reversed, label_to_ix.items()))
-
-    inputs = get_generative_model_inputs(data, label_to_ix)
     predictions = model.get_most_probable_labels(*inputs)
     label_predictions = [ix_to_label[ix] for ix in predictions]
     return score_predictions(data, label_predictions)
+
+
+def _clean_inputs(inputs, model):
+    if type(model).__name__ == "NaiveBayes":
+        inputs = (inputs[0],)
+    elif type(model).__name__ == "HMM":
+        inputs = (inputs[0], inputs[2])
+    elif type(model).__name__ == "LinkedHMM":
+        pass
+    else:
+        raise ValueError("Unknown model type: %s" % str(type(model)))
+    return inputs
 
 
 def get_unweighted_training_labels(instance, label_to_ix, treat_tie_as):
