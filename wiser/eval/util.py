@@ -105,7 +105,7 @@ def score_predictions(instances, predictions,
     return results
 
 
-def score_labeling_functions(instances, gold_label_key='tags'):
+def score_tagging_rules(instances, gold_label_key='tags'):
     lf_scores = {}
     for instance in instances:
         for lf_name, predictions in instance['WISER_LABELS'].items():
@@ -138,7 +138,7 @@ def score_labeling_functions(instances, gold_label_key='tags'):
     return results
 
 
-def score_linking_functions(instances, gold_label_keys='tags'):
+def score_linking_rules(instances, gold_label_keys='tags'):
     lf_scores = {}
     for instance in instances:
         for lf_name, predictions in instance['WISER_LINKS'].items():
