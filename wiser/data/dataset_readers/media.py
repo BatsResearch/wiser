@@ -30,7 +30,6 @@ class MediaDatasetReader(DatasetReader):
 
         for actor, sentences in actor_dict.items():
             for sent in sentences:
-
                 tokens = [Token(t[0]) for t in sent]
                 tags = None
                 if len(sent[0]) == 2:
