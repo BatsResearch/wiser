@@ -15,5 +15,3 @@ def train_discriminative_model(train_data_path, dev_data_path, test_data_path,
     os.environ['TEST_PATH'] = str(test_data_path)
     os.environ['CUDA_DEVICE'] = str(cuda_device)
     os.environ['USE_TAGS'] = str(use_tags)
-
-    os.system('allennlp train %s -f -s %s --include-package wiser' % (train_config_path, output_path))
