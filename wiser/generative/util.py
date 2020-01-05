@@ -183,3 +183,18 @@ def get_generative_model_inputs(instances, label_to_ix):
         offset += len(doc['tokens'])
 
     return label_votes, link_votes, seq_starts
+
+# from wiser.data import save_label_distribution
+# from wiser.eval import get_generative_model_inputs
+#
+# def save_generative_model_output(path, model, train_data, dev_data, test_data, gen_label_to_ix, disc_label_to_ix):
+#
+#     inputs = _clean_inputs(get_generative_model_inputs(train_data, gen_label_to_ix), model)
+#
+#     import pdb
+#     pdb.set_trace()
+#     p_unary, p_pairwise = inputs
+#     save_label_distribution('%s/train_data.p' % path, train_data, p_unary, p_pairwise,
+#                             gen_label_to_ix,disc_label_to_ix)
+#     save_label_distribution('%s/dev_data.p' % path, dev_data)
+#     save_label_distribution('%s/test_data.p', test_data)
