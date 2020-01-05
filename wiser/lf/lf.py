@@ -1,4 +1,4 @@
-class LabelingFunction:
+class TaggingRule:
     def apply(self, instances):
         for instance in instances:
             # Initializes metadata field
@@ -21,7 +21,7 @@ class LabelingFunction:
         return type(self).__name__
 
 
-class LinkingFunction(LabelingFunction):
+class LinkingRule(TaggingRule):
     def apply_instance(self, instance):
         raise NotImplementedError
 
@@ -29,7 +29,7 @@ class LinkingFunction(LabelingFunction):
         return "WISER_LINKS"
 
 
-class DictionaryMatcher(LabelingFunction):
+class DictionaryMatcher(TaggingRule):
     def __init__(self, name, terms, uncased=False, match_lemmas=False, i_label="I", abs_label="ABS"):
         self.name = name
         self.uncased = uncased
