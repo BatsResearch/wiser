@@ -10,6 +10,7 @@ def get_vote_mask(instance):
     mask = np.where(votes == 'ABS', 0, 1)
     return ArrayField(np.ndarray.max(mask, 0))
 
+
 def get_marginals(i, num_tokens, unary_marginals, pairwise_marginals):
 
     unary_marginals_list = []
@@ -64,7 +65,6 @@ def save_label_distribution(save_path, data, unary_marginals=None,
                                                       gen_label_to_ix,
                                                       disc_label_to_ix)
 
-
     i = 0
     instances = []
     for instance in data:
@@ -75,7 +75,7 @@ def save_label_distribution(save_path, data, unary_marginals=None,
             fields['sentence_spans'] = instance['sentence_spans']
 
         if 'tags' in instance and save_tags:
-            fields['tags'] =  instance['tags']
+            fields['tags'] = instance['tags']
 
         if unary_marginals is not None:
             instance_unary_list, instance_pairwise_list, i = get_marginals(
