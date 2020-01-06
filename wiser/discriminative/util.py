@@ -3,7 +3,7 @@ import random
 
 
 def train_discriminative_model(train_data_path, dev_data_path, test_data_path,
-                               train_config_path, output_path='discriminative_output/default',
+                               train_config_path, output_path='output/discriminative/default',
                                cuda_device=-1, use_tags=False, seed=None):
 
     if seed is None:
@@ -17,4 +17,4 @@ def train_discriminative_model(train_data_path, dev_data_path, test_data_path,
     os.environ['USE_TAGS'] = str(use_tags)
 
     os.system('allennlp train %s -f -s %s --include-package wiser' %
-              (training_config_path, path_to_save))
+              (train_config_path, output_path))
