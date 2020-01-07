@@ -101,11 +101,9 @@ class WiserCrfTagger(CrfTagger):
                                                     unary_marginals=unary_marginals,
                                                     pairwise_marginals=pairwise_marginals)
                 output["loss"] = -ell
-            else:
-                raise AttributeError('Unary marginals not found. Did you forget to save them?')
-
+                
         if tags is not None:
-            if self.use_tags:
+            if unary_marginals is None or self.use_tags:
                 log_likelihood = self.crf(logits, tags, mask)
                 output['loss'] = -log_likelihood
 
