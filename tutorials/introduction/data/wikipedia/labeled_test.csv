@@ -5549,19 +5549,19 @@ Adult,O
 Swim,O
 's,O
 Robot,I-MOV
-Chicken,D
+Chicken,I-MOV
 and,O
 has,O
 also,O
-directed,W
-the,I-MOV
+directed,O
+the,O
 Robot,I-MOV
 Chicken,I-MOV
-Star,O
-Wars,O
+Star,I-MOV
+Wars,I-MOV
 and,O
-DC,O
-Comics,O
+DC,I-MOV
+Comics,I-MOV
 specials,O
 .,O
 *END-SENTENCE*,Seth Green
