@@ -25,6 +25,7 @@ def get_marginals(i, num_tokens, unary_marginals, pairwise_marginals):
 
     return [unary_marginals_list, pairwise_marginals_list, i]
 
+
 def get_complete_unary_marginals(unary_marginals, gen_label_to_ix, disc_label_to_ix):
 
     if unary_marginals is None or gen_label_to_ix is None or disc_label_to_ix is None:
@@ -37,6 +38,7 @@ def get_complete_unary_marginals(unary_marginals, gen_label_to_ix, disc_label_to
             new_unaries[:,v] = unary_marginals[:,gen_label_to_ix[k]-1]
 
     return new_unaries
+
 
 def get_complete_pairwise_marginals(pairwise_marginals, gen_label_to_ix, disc_label_to_ix):
 

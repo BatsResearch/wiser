@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 from wiser.eval import score_predictions
+from collections import Counter
 
 
 def grid_search(model_constructor, train_data, dev_data, config,
@@ -32,19 +33,18 @@ def grid_search(model_constructor, train_data, dev_data, config,
 
 
 def get_label_to_ix(data):
-    from collections import Counter
     tag_count = Counter()
-    vote_count = Counter()
 
     for instance in data:
         for tag in instance['tags']:
             tag_count[tag] += 1
-        for tagging_function in instance['WISER_LABELS']:
-            for vote in instance['WISER_LABELS'][tagging_function]:
-                vote_count[vote] += 1
 
     disc_label_to_ix = {value[0]: int(ix) for ix, value in enumerate(tag_count.most_common())}
-    gen_label_to_ix = {value[0]: int(ix) for ix, value in enumerate(vote_count.most_common())}
+    gen_label_to_ix = disc_label_to_ix.copy()
+
+    for ix in gen_label_to_ix:
+        gen_label_to_ix[ix] += 1
+    gen_label_to_ix['ABS'] = 0
 
     return gen_label_to_ix, disc_label_to_ix
 
@@ -61,16 +61,15 @@ def get_rules(data):
     return labeling_functions, linking_functions
 
 
-def train_generative_model(model, train_data, dev_data, epochs,
-                           label_to_ix, config):
-    train_inputs = _clean_inputs(get_generative_model_inputs(train_data, label_to_ix), model)
+def train_generative_model(model, train_data, dev_data, label_to_ix, config):
+    train_inputs = clean_inputs(get_generative_model_inputs(train_data, label_to_ix), model)
 
     best_p = float('-inf')
     best_r = float('-inf')
     best_f1 = float('-inf')
     best_params = None
 
-    for i in range(epochs):
+    for i in range(config.epochs):
         model.estimate_label_model(*train_inputs, config=config)
         results = evaluate_generative_model(model, dev_data, label_to_ix)
 
@@ -87,14 +86,14 @@ def train_generative_model(model, train_data, dev_data, epochs,
 
 def evaluate_generative_model(model, data, label_to_ix):
 
-    inputs = _clean_inputs(get_generative_model_inputs(data, label_to_ix), model)
+    inputs = clean_inputs(get_generative_model_inputs(data, label_to_ix), model)
     ix_to_label = dict(map(reversed, label_to_ix.items()))
     predictions = model.get_most_probable_labels(*inputs)
     label_predictions = [ix_to_label[ix] for ix in predictions]
     return score_predictions(data, label_predictions)
 
 
-def _clean_inputs(inputs, model):
+def clean_inputs(inputs, model):
     if type(model).__name__ == "NaiveBayes":
         inputs = (inputs[0],)
     elif type(model).__name__ == "HMM":
@@ -183,18 +182,3 @@ def get_generative_model_inputs(instances, label_to_ix):
         offset += len(doc['tokens'])
 
     return label_votes, link_votes, seq_starts
-
-# from wiser.data import save_label_distribution
-# from wiser.eval import get_generative_model_inputs
-#
-# def save_generative_model_output(path, model, train_data, dev_data, test_data, gen_label_to_ix, disc_label_to_ix):
-#
-#     inputs = _clean_inputs(get_generative_model_inputs(train_data, gen_label_to_ix), model)
-#
-#     import pdb
-#     pdb.set_trace()
-#     p_unary, p_pairwise = inputs
-#     save_label_distribution('%s/train_data.p' % path, train_data, p_unary, p_pairwise,
-#                             gen_label_to_ix,disc_label_to_ix)
-#     save_label_distribution('%s/dev_data.p' % path, dev_data)
-#     save_label_distribution('%s/test_data.p', test_data)

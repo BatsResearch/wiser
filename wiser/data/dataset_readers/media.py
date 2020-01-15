@@ -3,9 +3,8 @@ from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.fields import TextField, SequenceLabelField, MetadataField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
-from typing import Iterator, List, Dict
+from typing import List, Dict
 import csv
-import pickle
 
 @DatasetReader.register('media')
 class MediaDatasetReader(DatasetReader):
@@ -35,8 +34,6 @@ class MediaDatasetReader(DatasetReader):
             for row in reader:
                 word, label = row
 
-                if label == 'i-MOV':
-                    label = 'I-MOV'
                 if word == '\n':
                     continue
                 if word == "*START-SENTENCE*":
