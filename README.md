@@ -49,7 +49,7 @@ Safranchik Esteban, Shiying Luo, Stephen H. Bach. "Weakly Supervised Sequence Ta
 ```
 @inproceedings{safranchik2020weakly,
   title = {Weakly Supervised Sequence Tagging From Noisy Rules}, 
-  author = {Safranchik, Esteban Luo, Shiying and Bach, Stephen H.}, 
+  author = {Safranchik, Esteban and Luo, Shiying and Bach, Stephen H.}, 
   booktitle = {AAAI}, 
   year = 2020, 
 }
