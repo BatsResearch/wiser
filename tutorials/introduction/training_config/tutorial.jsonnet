@@ -85,9 +85,9 @@
     },
     "validation_metric": "+f1-measure-overall",
     "num_serialized_models_to_keep": 3,
-    "num_epochs": 75,
+    "num_epochs": 15,
     "grad_norm": 5.0,
-    "patience": 25,
+    "patience": 5,
     "cuda_device": std.extVar("CUDA_DEVICE"),
   }
 }

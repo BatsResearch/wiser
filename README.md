@@ -22,16 +22,22 @@ To get the code for generative models and other rule-aggregation methods, please
 
 ### Installing
 
-In your virtual enviornment, please run the *labelmodels/setup.py* and *wiser/setup.py* scripts to install the corresponding dependencies.
+In your virtual enviornment, go to the *labelmodels* and run
 
 ```
-python3 setup.py install
+pip install .
 ```
 
-Then, to install other dependencies required to run WISER, run
+Do the same thing on the *wiser* repo, and then install the remaining dependencies with
 
 ```
-pip3 install -r requirements.txt
+pip install -r requirements.txt
+```
+
+Then, download the small SpaCy English dictionary using
+
+```
+python -m spacy download en_core_web_sm
 ```
 
 ## Getting Started

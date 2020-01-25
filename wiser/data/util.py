@@ -35,7 +35,7 @@ def get_complete_unary_marginals(unary_marginals, gen_label_to_ix, disc_label_to
 
     for k, v in disc_label_to_ix.items():
         if k in gen_label_to_ix:
-            new_unaries[:,v] = unary_marginals[:,gen_label_to_ix[k]-1]
+            new_unaries[:, v] = unary_marginals[:, gen_label_to_ix[k]-1]
 
     return new_unaries
 
@@ -50,7 +50,7 @@ def get_complete_pairwise_marginals(pairwise_marginals, gen_label_to_ix, disc_la
     for k1, v1 in disc_label_to_ix.items():
         for k2, v2 in disc_label_to_ix.items():
             if k1 in gen_label_to_ix and k2 in gen_label_to_ix:
-                new_pairwise[:,v1, v2] = pairwise_marginals[:, gen_label_to_ix[k1]-1, gen_label_to_ix[k2]-1]
+                new_pairwise[:, v1, v2] = pairwise_marginals[:, gen_label_to_ix[k1]-1, gen_label_to_ix[k2]-1]
 
     return new_pairwise
 

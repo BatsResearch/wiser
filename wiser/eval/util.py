@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 
+
 def score_labels_majority_vote(instances,  gold_label_key='tags',
                                treat_tie_as='O', span_level=True):
     tp, fp, fn = 0, 0, 0
@@ -23,6 +24,7 @@ def score_labels_majority_vote(instances,  gold_label_key='tags',
         [record], columns=column_names, index=index)
     results = pd.DataFrame.sort_index(results)
     return results
+
 
 def get_generative_model_inputs(instances, label_to_ix):
     label_name_to_col = {}
