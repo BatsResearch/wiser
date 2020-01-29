@@ -1,9 +1,9 @@
 // Configuration for the CONLL model from AllenAI, modified slightly
 // and switched to BERT features
 {
-  "random_seed": std.extVar("RANDOM_SEED"),
-  "numpy_seed": std.extVar("RANDOM_SEED"),
-  "pytorch_seed": std.extVar("RANDOM_SEED"),
+  "random_seed": 0,
+  "numpy_seed": 0,
+  "pytorch_seed": 0,
   "dataset_reader": {
     "type": "weak_label",
     "token_indexers": {
@@ -19,11 +19,10 @@
         "min_padding_length": 3
       },
     },
-//    "split_sentences": false
   },
-  "train_data_path": std.extVar("TRAIN_PATH"),
-  "validation_data_path":  std.extVar("DEV_PATH"),
-  "test_data_path": std.extVar("TEST_PATH"),
+  "train_data_path": "output/generative/link_hmm/train_data.p",         // If necessary, change to your own data path
+  "validation_data_path": "output/generative/link_hmm/dev_data.p",
+  "test_data_path": "output/generative/link_hmm/test_data.p",
   "evaluate_on_test": true,
   "model": {
     "type": "wiser_crf_tagger",
@@ -72,7 +71,8 @@
           "alpha": 0.1
         }
       ]
-    ]
+    ],
+    "use_tags": false // Only change to true if tags exists and you're planning to run the fully-supervised model
   },
   "iterator": {
     "type": "basic",
@@ -85,9 +85,9 @@
     },
     "validation_metric": "+f1-measure-overall",
     "num_serialized_models_to_keep": 3,
-    "num_epochs": 15,
+    "num_epochs": 50,
     "grad_norm": 5.0,
-    "patience": 5,
-    "cuda_device": std.extVar("CUDA_DEVICE"),
+    "patience": 10,
+    "cuda_device": -1 // Change to 0 if you have a CUDA device
   }
 }

@@ -13,7 +13,7 @@ class MediaDatasetReader(DatasetReader):
         super().__init__(lazy=False)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
-    def text_to_instance(self, actor: str, tokens: List[Token], tags: List[str] = None) -> Instance:
+    def text_to_instance(self, tokens: List[Token], tags: List[str] = None, actor: str = None) -> Instance:
         tokens_field = TextField(tokens, self.token_indexers)
         fields = {"tokens": tokens_field}
 
@@ -21,7 +21,8 @@ class MediaDatasetReader(DatasetReader):
             tags_field = SequenceLabelField(labels=tags, sequence_field=tokens_field)
             fields["tags"] = tags_field
 
-        fields['actor_name'] = MetadataField(actor)
+        if actor:
+            fields['actor'] = MetadataField(actor)
 
         return Instance(fields)
 
@@ -41,12 +42,13 @@ class MediaDatasetReader(DatasetReader):
                     tags = []
                 elif word == "*END-SENTENCE*":
                     if len(tokens) > 1:
-                        yield self.text_to_instance(label, tokens, tags)
+                        yield self.text_to_instance(tokens, tags, label)
                     tokens = []
                     tags = []
                 elif word == "*START-ACTOR*" or word == "*END-ACTOR*":
                     continue
                 else:
-                    assert label in {'I-MOV', 'I-AWD', 'B-MOV', 'B-AWD', 'O'}
+                    if label not in {'I-MOV', 'I-AWD', 'B-MOV', 'B-AWD', 'O'}:
+                        raise RuntimeError('Label %s is not a valid tag' % label)
                     tokens.append(Token(word))
                     tags.append(label)
