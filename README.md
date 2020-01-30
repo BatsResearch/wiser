@@ -37,7 +37,7 @@ pip install -r requirements.txt
 Then, download the small [spaCy English dictionary](https://spacy.io/models/en) using
 
 ```
-python -m spacy download en_core_web_sm
+python3 -m spacy download en_core_web_sm
 ```
 
 ## Getting Started
