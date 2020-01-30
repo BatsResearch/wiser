@@ -34,10 +34,10 @@ Do the same thing on the *wiser* repo, and then install the remaining dependenci
 pip install -r requirements.txt
 ```
 
-Then, download the small SpaCy English dictionary using
+Then, download the small [spaCy English dictionary](https://spacy.io/models/en) using
 
 ```
-python -m spacy download en_core_web_sm
+python3 -m spacy download en_core_web_sm
 ```
 
 ## Getting Started
