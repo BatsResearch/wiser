@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='WISER',
+    name='wiser',
     version='0.0.1',
     url='https://github.com/BatsResearch/wiser.git',
     author='Esteban Safranchik, Shiying Luo, Stephen H. Bach, Daniel Ritter',
