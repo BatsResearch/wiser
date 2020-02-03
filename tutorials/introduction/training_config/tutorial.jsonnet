@@ -59,7 +59,7 @@
       "type": "lstm",
       "input_size": 768 + 128,
       "hidden_size": 200,
-      "num_layers": 2,
+      "num_layers": 3,
       "dropout": 0.5,
       "bidirectional": true
     },

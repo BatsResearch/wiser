@@ -1,6 +1,6 @@
 import torch
 from allennlp.modules.elmo import Elmo, batch_to_ids
-from .lf import LinkingRule
+from .rules import LinkingRule
 
 
 class ElmoLinkingRule(LinkingRule):

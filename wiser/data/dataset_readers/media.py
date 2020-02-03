@@ -48,7 +48,7 @@ class MediaDatasetReader(DatasetReader):
                 elif word == "*START-ACTOR*" or word == "*END-ACTOR*":
                     continue
                 else:
-                    if label not in {'I-MOV', 'I-AWD', 'B-MOV', 'B-AWD', 'O'}:
+                    if label not in {'I-PERF', 'I-AWD', 'B-PERF', 'B-AWD', 'O'}:
                         raise RuntimeError('Label %s is not a valid tag' % label)
                     tokens.append(Token(word))
                     tags.append(label)

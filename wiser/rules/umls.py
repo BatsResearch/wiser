@@ -1,6 +1,6 @@
 import itertools
 import os
-from .lf import DictionaryMatcher
+from .rules import DictionaryMatcher
 
 
 class UMLSMatcher(DictionaryMatcher):

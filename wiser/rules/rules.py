@@ -9,7 +9,7 @@ class TaggingRule:
             labels = self.apply_instance(instance)
 
             # Stores the labels in the instance
-            instance[self._get_metadata_field()][self._get_lf_name()] = labels
+            instance[self._get_metadata_field()][self._get_tr_name()] = labels
 
     def apply_instance(self, instance):
         raise NotImplementedError
@@ -17,7 +17,7 @@ class TaggingRule:
     def _get_metadata_field(self):
         return "WISER_LABELS"
 
-    def _get_lf_name(self):
+    def _get_tr_name(self):
         return type(self).__name__
 
 
@@ -94,7 +94,7 @@ class DictionaryMatcher(TaggingRule):
 
         return labels
 
-    def _get_lf_name(self):
+    def _get_tr_name(self):
         return self.name
 
     def _normalize_instance_tokens(self, tokens, lemmas=False):
