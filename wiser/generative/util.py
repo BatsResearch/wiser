@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 from wiser.eval import score_predictions
+from collections import Counter
 
 
 def grid_search(model_constructor, train_data, dev_data, config,
@@ -31,34 +32,46 @@ def grid_search(model_constructor, train_data, dev_data, config,
     return best_model, best_p, best_r, best_f1
 
 
-def train_generative_model(model, train_data, dev_data, epochs,
-                           label_to_ix, config):
-    train_inputs = get_gen_model_inputs(train_data, label_to_ix)
-    dev_inputs = get_gen_model_inputs(dev_data, label_to_ix)
-    if type(model).__name__ == "NaiveBayes":
-        train_inputs = (train_inputs[0],)
-        dev_inputs = (dev_inputs[0],)
-    elif type(model).__name__ == "HMM":
-        train_inputs = (train_inputs[0], train_inputs[2])
-        dev_inputs = (dev_inputs[0], dev_inputs[2])
-    elif type(model).__name__ == "LinkedHMM":
-        pass
-    else:
-        raise ValueError("Unknown model type: %s" % str(type(model)))
-    config.epochs = 1
+def get_label_to_ix(data):
+    tag_count = Counter()
 
-    ix_to_label = dict(map(reversed, label_to_ix.items()))
+    for instance in data:
+        for tag in instance['tags']:
+            tag_count[tag] += 1
+
+    disc_label_to_ix = {value[0]: int(ix) for ix, value in enumerate(tag_count.most_common())}
+    gen_label_to_ix = disc_label_to_ix.copy()
+
+    for ix in gen_label_to_ix:
+        gen_label_to_ix[ix] += 1
+    gen_label_to_ix['ABS'] = 0
+
+    return gen_label_to_ix, disc_label_to_ix
+
+
+def get_rules(data):
+    labeling_functions = set()
+    linking_functions = set()
+    for doc in data:
+        for name in doc['WISER_LABELS'].keys():
+            labeling_functions.add(name)
+        for name in doc['WISER_LINKS'].keys():
+            linking_functions.add(name)
+
+    return labeling_functions, linking_functions
+
+
+def train_generative_model(model, train_data, dev_data, label_to_ix, config):
+    train_inputs = clean_inputs(get_generative_model_inputs(train_data, label_to_ix), model)
 
     best_p = float('-inf')
     best_r = float('-inf')
     best_f1 = float('-inf')
     best_params = None
 
-    for i in range(epochs):
+    for i in range(config.epochs):
         model.estimate_label_model(*train_inputs, config=config)
-        predictions = model.get_most_probable_labels(*dev_inputs)
-        label_predictions = [ix_to_label[ix] for ix in predictions]
-        results = score_predictions(dev_data, label_predictions)
+        results = evaluate_generative_model(model, dev_data, label_to_ix)
 
         if results["F1"][0] > best_f1:
             best_p = results["P"][0]
@@ -69,6 +82,27 @@ def train_generative_model(model, train_data, dev_data, epochs,
     model.load_state_dict(best_params)
 
     return best_p, best_r, best_f1
+
+
+def evaluate_generative_model(model, data, label_to_ix):
+
+    inputs = clean_inputs(get_generative_model_inputs(data, label_to_ix), model)
+    ix_to_label = dict(map(reversed, label_to_ix.items()))
+    predictions = model.get_most_probable_labels(*inputs)
+    label_predictions = [ix_to_label[ix] for ix in predictions]
+    return score_predictions(data, label_predictions)
+
+
+def clean_inputs(inputs, model):
+    if type(model).__name__ == "NaiveBayes":
+        inputs = (inputs[0],)
+    elif type(model).__name__ == "HMM":
+        inputs = (inputs[0], inputs[2])
+    elif type(model).__name__ == "LinkedHMM":
+        pass
+    else:
+        raise ValueError("Unknown model type: %s" % str(type(model)))
+    return inputs
 
 
 def get_unweighted_training_labels(instance, label_to_ix, treat_tie_as):

@@ -1,9 +1,9 @@
 import torch
 from allennlp.modules.elmo import Elmo, batch_to_ids
-from .lf import LinkingFunction
+from .rules import LinkingRule
 
 
-class ElmoLinkingFunction(LinkingFunction):
+class ElmoLinkingRule(LinkingRule):
     def __init__(self, threshold):
         super().__init__()
         options_file = "https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway/elmo_2x4096_512_2048cnn_2xhighway_options.json"
@@ -29,4 +29,4 @@ class ElmoLinkingFunction(LinkingFunction):
         return links
 
     def _get_lf_name(self):
-        return "ElmoLinkingFunction-" + str(self.threshold)
+        return "ElmoLinkingRule-" + str(self.threshold)

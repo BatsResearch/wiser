@@ -1,8 +1,9 @@
 from allennlp.data import Instance
 from allennlp.data.dataset_readers import DatasetReader
 from allennlp.data.token_indexers import TokenIndexer
-from typing import Iterator, Dict
+from typing import Iterator, Dict, List
 from allennlp.data.fields import ArrayField, TextField, SequenceLabelField
+from allennlp.data.tokenizers import Token
 import pickle
 
 
@@ -19,6 +20,12 @@ class WeakLabelDatasetReader(DatasetReader):
         super().__init__(lazy=False)
         self.token_indexers = token_indexers
         self.split_sentences = split_sentences
+
+    def text_to_instance(self, tokens: List[Token]) -> Instance:
+        tokens_field = TextField(tokens, self.token_indexers)
+        fields = {"tokens": tokens_field}
+
+        return Instance(fields)
 
     def _read(self, file_path: str) -> Iterator[Instance]:
 
