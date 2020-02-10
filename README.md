@@ -49,7 +49,7 @@ More tutorials coming soon!
 
 Please cite the following paper if you are using our tool. Thank you!
 
-Safranchik Esteban, Shiying Luo, Stephen H. Bach. "Weakly Supervised Sequence Tagging From Noisy Rules". In 34th AAAI Conference on Artificial Intelligence, 2020.
+[Esteban Safranchik](https://twitter.com/safranchik_e), Shiying Luo, [Stephen H. Bach](https://twitter.com/stevebach). "Weakly Supervised Sequence Tagging From Noisy Rules". In 34th AAAI Conference on Artificial Intelligence, 2020.
 
 ```
 @inproceedings{safranchik2020weakly,
