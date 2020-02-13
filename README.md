@@ -30,7 +30,6 @@ Or alternatively
 
 ```
 conda install --file requirements.txt
-
 ```
 
 Then, inside the *wiser* directory, please run
