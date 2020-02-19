@@ -20,7 +20,7 @@ These instructions will WISER up and running on your local machine to develop yo
 
 ### Installing
 
-In your virtual environment, please install the required dependencies using
+WISER requires Python 3.7. To install the required dependencies, please run
 
 ```
 pip install -r requirements.txt
