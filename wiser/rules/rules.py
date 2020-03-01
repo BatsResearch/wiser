@@ -1,6 +1,8 @@
+from tqdm.auto import tqdm
+
 class TaggingRule:
     def apply(self, instances):
-        for instance in instances:
+        for instance in tqdm(instances):
             # Initializes metadata field
             if self._get_metadata_field() not in instance:
                 instance.add_field(self._get_metadata_field(), {})
