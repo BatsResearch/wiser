@@ -1,5 +1,18 @@
 from tqdm.auto import tqdm
 
+
+def remove_rule(data, name):
+    """
+    Removes a tagging or linking rule from a given dataset
+    """
+
+    for instance in data:
+        if name in instance['WISER_LABELS']:
+            del instance['WISER_LABELS'][name]
+        if name in instance['WISER_LINKS']:
+            del instance['WISER_LINKS'][name]
+
+
 class TaggingRule:
     def apply(self, instances):
         for instance in tqdm(instances):
