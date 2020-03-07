@@ -165,8 +165,11 @@ def score_linking_rules(instances, gold_label_keys='tags'):
                         lf_scores[lf_name][2] += 1
 
     for counts in lf_scores.values():
-        counts.append(round(
-            (counts[0] + counts[1]) / (counts[0] + counts[1] + counts[2]), ndigits=4))
+        if counts[0] + counts[1] + counts[2] == 0:
+            counts.append(float('NaN'))
+        else:
+            counts.append(round(
+                (counts[0] + counts[1]) / (counts[0] + counts[1] + counts[2]), ndigits=4))
 
     # Collects results into a dataframe
     column_names = ["Entity Links", "Non-Entity Links", "Incorrect Links", "Accuracy"]
