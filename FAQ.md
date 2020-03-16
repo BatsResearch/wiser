@@ -30,7 +30,7 @@
     the tagging and linking rules worse than an unweighted majority vote. 
     To fix this issue, try reducing the strength of the regularization of your generative model 
     (``acc prior`` and ``balance prior``).
-    Doing so will increase the confidence in the votes outputted by the tagging and linking rules.
+    This will increase the confidence in the votes outputted by the tagging and linking rules.
     
 - The discriminative neural network scores are significantly worse than the generative model scores.
     - If you observe that your discriminative model is significantly underperforming your generative model,
@@ -44,7 +44,7 @@
         The discriminative performance can also be dependent on the complexity of the neural tagger. 
         Try adjusting the number of hidden layers, the hidden size, or the batch size.
         - Running a grid search using different generative hyperparameter values, and then training the discriminative 
-        neural tagger with the best-performing values. 
+        neural tagger with the best-performing set of values. 
         
 - The discriminative dev F1 looks good, but the test F1 is significantly worse.
     - Low test F1 is generally associated to dev data overfitting. 
@@ -53,7 +53,7 @@
     and reduce or increase the complexity of the model accordingly.
   
 - My generative pipeline is looking good, but I get poor scores on the training set while training the discrimnative model.
-    - Since our framework does not require training labels, the neural tagger there will have no ground-truth labels to 
-    compute training precision, recall, and F1. during the training these metrics will be inaccurate and thus very close to     0.
+    - Since our framework does not require training labels, the neural tagger will have no ground-truth labels to 
+    compute training precision, recall, and F1. During training, these metrics will be inaccurate and thus very close to     0.
 
  
