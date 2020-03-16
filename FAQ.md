@@ -9,7 +9,7 @@
 - How many tagging rules should I write?
     - The number of tagging rules depends on the task you're working on. 
     Typically, rules with high accuracy (+90%) won't hurt performance, so you can write as many of these as you'd like.
-    The best way to evaluate your tagging rules is using the majority vote (see intro tutorial, notebook 2).
+    The best way to evaluate your tagging rules is using the majority vote (see intro. tutorial, notebook 2).
     To develop robust NER frameworks, we recommend introducing a few tagging rules that provide negative supervision 
     in the form of 'O' tags.
 
