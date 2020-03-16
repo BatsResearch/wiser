@@ -8,8 +8,8 @@
  
 - How many tagging rules should I write?
     - The number of tagging rules depends on the task you're working on. 
-    Typically, rules with high accuracy won't hurt performance, so you can write as many of these as you'd like.
-    The best way to evaluate your tagging rules is using the majority vote.
+    Typically, rules with high accuracy (+90%) won't hurt performance, so you can write as many of these as you'd like.
+    The best way to evaluate your tagging rules is using the majority vote (see intro tutorial, notebook 2).
     To develop robust NER frameworks, we recommend introducing a few tagging rules that provide negative supervision 
     in the form of 'O' tags.
 
@@ -33,7 +33,7 @@
     Doing so will increase the confidence in the votes outputted by the tagging and linking rules.
     
 - The discriminative neural network scores are significantly worse than the generative model scores.
-    - If you observe that your discriminative model is significantly underperforming your generative mode,
+    - If you observe that your discriminative model is significantly underperforming your generative model,
     then you should try the following:
         - Tuning the generative hyperparameters: 
         Oftentimes, the probabilistic labels produced by the generative model are very close to uniform. 
@@ -43,7 +43,7 @@
         - Tuning the discriminative hyperparameters: 
         The discriminative performance can also be dependent on the complexity of the neural tagger. 
         Try adjusting the number of hidden layers, the hidden size, or the batch size.
-        - Running a grid search using different generative hyperparameter values, and training the discriminative 
+        - Running a grid search using different generative hyperparameter values, and then training the discriminative 
         neural tagger with the best-performing values. 
         
 - The discriminative dev F1 looks good, but the test F1 is significantly worse.
@@ -52,9 +52,8 @@
     You should also revise the discriminative hyperparameters,
     and reduce or increase the complexity of the model accordingly.
   
-- My generative pipeline is looking good, but I get los scores on the train sets while training the discrimnative model.
+- My generative pipeline is looking good, but I get poor scores on the training set while training the discrimnative model.
     - Since our framework does not require training labels, the neural tagger there will have no ground-truth labels to 
-    compute training precision, recall, and F1. during the training stages, train precision, recall, and F1 will 
-    not be displayed erroneously and be very close to 0.
+    compute training precision, recall, and F1. during the training these metrics will be inaccurate and thus very close to     0.
 
  
