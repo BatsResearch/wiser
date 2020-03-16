@@ -1,7 +1,7 @@
 # WISER FAQ
 ## Pipeline Questions
 
-- What is the best practice to writing tagging and linking rules?
+- What is the best practice for writing tagging and linking rules?
     - It depends! It is generally best to write tagging rules of high accuracy and coverage.
        We generally recommend writing tagging rules that identify one or two specific keyword tokens in entity spans, 
        and using the linking rules to define the boundaries of said entities.  
