@@ -40,9 +40,9 @@ pip install .
 
 ## Getting Started
 
-Refer to *tutorial/introduction* for a comprehensive introduction to using WISER to train end-to-end frameworks with weak supervision. 
+Refer to *tutorial/introduction* for a comprehensive introduction to using WISER to train end-to-end frameworks with weak supervision. More tutorials coming soon!
 
-More tutorials coming soon!
+Once you're comfortable with the WISER framework, we recommend looking at our [FAQ](https://github.com/BatsResearch/wiser/blob/master/FAQ.md) for strategies on how to write rules and debug your pipeline.
 
 ## Citation
 
