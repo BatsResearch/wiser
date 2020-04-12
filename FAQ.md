@@ -68,8 +68,8 @@
         neural tagger with the best-performing set of values (see next item). 
         
 - How do I run a grid search search over my generative model hyperparameters?
-    - You will first need to create a small script that trains your generative model with different hyperparameters. We           
-    recommend fixing the ``init_acc`` to 0.9 or 0.95, and then finding the optimal combination of ``acc_prior`` and               
+    - You will first need to create a small script that trains your generative model with different hyperparameters. We
+    recommend fixing the value of ``init_acc`` to 0.9 or 0.95, and then finding the optimal combination of ``acc_prior`` and
     ``balance_prior`` over the values {0.5, 1, 5, 10, 50, 100, 500}. 
     However, sometimes the best combination of hyperparameters can produce a generative model whose probabilistic labels 
     are too close to uniform (e.g., good generative performance but poor discriminative performance). 
@@ -78,7 +78,7 @@
 - The discriminative dev F1 looks good, but the test F1 is significantly worse.
     - Low test F1 is generally associated to overfitting to the dev data. 
     We recommend going over the tagging rules and making sure that they're not overfitting to the train or dev data 
-    (e.g., writing rules that are too specific for some cases).
+    (e.g., writing overly-complex rules that are specific to some train/dev cases).
     You should also revise the discriminative hyperparameters, and change the model complexity of the accordingly.
   
 - My generative pipeline is looking good, but I get poor scores on the training set while training the discrimnative 
