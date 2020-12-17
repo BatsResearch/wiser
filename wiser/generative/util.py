@@ -17,7 +17,7 @@ def grid_search(model_constructor, train_data, dev_data, config,
         for balance_prior in balance_priors:
             model = model_constructor(acc_prior, balance_prior)
             p, r, f1 = train_generative_model(
-                model, train_data, dev_data, epochs, label_to_ix, config)
+                model, train_data, dev_data, label_to_ix, config)
             if f1 > best_f1:
                 best_p = p
                 best_r = r
