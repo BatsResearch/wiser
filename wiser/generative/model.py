@@ -1,4 +1,4 @@
-from wiser.generative import get_label_to_ix, get_rules, train_generative_model, evaluate_generative_model, clean_inputs
+from wiser.generative import get_label_to_ix, get_rules, train_generative_model, evaluate_generative_model, clean_inputs, get_predictions_generative_model
 from wiser.data import save_label_distribution
 from wiser.eval import get_generative_model_inputs
 
@@ -68,6 +68,20 @@ class Model:
             raise ValueError("You need to train the generative model before evaluating it's output.")
 
         return evaluate_generative_model(model=self.model, data=data, label_to_ix=self.gen_label_to_ix)
+
+    
+    def get_predictions(self, data):
+        """
+        Gets predictions for the generative model for an input sentence
+
+        :param data:                array of labeled AllenNLP instances used as evaluation samples
+
+        """
+
+        if self.model is None:
+            raise ValueError("You need to train the generative model before evaluating it's output.")
+
+        return get_predictions_generative_model(model=self.model, data=data, label_to_ix=self.gen_label_to_ix)
 
     def save_output(self, data, path, save_distribution=True, save_tags=True):
 

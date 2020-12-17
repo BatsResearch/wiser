@@ -92,6 +92,12 @@ def evaluate_generative_model(model, data, label_to_ix):
     label_predictions = [ix_to_label[ix] for ix in predictions]
     return score_predictions(data, label_predictions)
 
+def get_predictions_generative_model(model, data, label_to_ix):
+
+    inputs = clean_inputs(get_generative_model_inputs(data, label_to_ix), model)
+    ix_to_label = dict(map(reversed, label_to_ix.items()))
+    predictions = model.get_most_probable_labels(*inputs)
+    return [ix_to_label[ix] for ix in predictions]
 
 def clean_inputs(inputs, model):
     if type(model).__name__ == "NaiveBayes":
