@@ -15,20 +15,17 @@ install:
 script:
   - cd tutorials
   - cd introduction
-  - mkdir data
-  - cd data
+  - mkdir output
+  - cd output
   - mkdir tmp
-  - cd ../
-  - ls
   - mkdir generative
   - cd generative
   - mkdir link_hmm
-  - cd ../../
-  - ls
+  - cd ../
   - mkdir discriminative
   - cd discriminative
   - mkdir link_hmm
-  - cd ../../../
+  - cd ../../
   - runipy 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
   - runipy 'Intro Tutorial 2 - Generative Models.ipynb'
   - runipy 'Intro Tutorial 3 - Neural Networks.ipynb'
