@@ -17,10 +17,12 @@ script:
   - cd data
   - mkdir tmp
   - cd ../
+  - ls
   - mkdir generative
   - cd generative
   - mkdir link_hmm
   - cd ../../
+  - ls
   - mkdir discriminative
   - cd discriminative
   - mkdir link_hmm
