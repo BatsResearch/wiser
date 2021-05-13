@@ -13,6 +13,18 @@ install:
 
 # command to run tests
 script:
+  - mkdir data
+  - cd data
+  - mkdir tmp
+  - cd ../
+  - mkdir generative
+  - cd generative
+  - mkdir link_hmm
+  - cd ../../
+  - mkdir discriminative
+  - cd discriminative
+  - mkdir link_hmm
+  - cd ../../../
   - runipy tutorials/introduction/'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
   - runipy tutorials/introduction/'Intro Tutorial 2 - Generative Models.ipynb'
   - runipy tutorials/introduction/'Intro Tutorial 3 - Neural Networks.ipynb'
