@@ -41,10 +41,10 @@ class Model:
         self.gen_label_to_ix, self.disc_label_to_ix = get_label_to_ix(train_data + dev_data)
         tagging_rules, linking_rules = get_rules(train_data + dev_data)
 
-        if self.model_type == 'NaiveBayes':
+        if self.model_type == 'NaiveBayes' or self.model_type == 'HMM':
             self.model = self.model_module(len(self.gen_label_to_ix) - 1, len(tagging_rules),
                                       self.init_acc, self.acc_prior, self.balance_prior)
-        elif self.model_type == 'HMM' or self.model_type == 'LinkedHMM':
+        elif self.model_type == 'LinkedHMM':
             self.model = self.model_module(len(self.gen_label_to_ix) - 1, len(tagging_rules), len(linking_rules),
                                       self.init_acc, self.acc_prior, self.balance_prior)
         else:
