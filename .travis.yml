@@ -1,0 +1,17 @@
+language: python
+python:
+  - "3.7"
+# command to install dependencies
+before_install:
+  - pip install -U pip
+install:
+  - pip install -r requirements.txt
+  - pip uninstall overrides
+  - pip install overrides==3.1.0
+  - pip install runipy
+
+# command to run tests
+script:
+  - runipy tutorials/introduction/'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
+  - runipy tutorials/introduction/'Intro Tutorial 2 - Generative Models.ipynb'
+  - runipy tutorials/introduction/'Intro Tutorial 3 - Neural Networks.ipynb'
