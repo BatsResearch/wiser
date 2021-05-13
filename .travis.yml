@@ -9,6 +9,7 @@ install:
   - pip uninstall -y overrides
   - pip install overrides==3.1.0
   - pip install runipy
+  - pip install git+https://github.com/BatsResearch/wiser.git
 
 # command to run tests
 script:
