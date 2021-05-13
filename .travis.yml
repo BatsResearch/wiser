@@ -26,6 +26,9 @@ script:
   - cd discriminative
   - mkdir link_hmm
   - cd ../../
-  - runipy 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
-  - runipy 'Intro Tutorial 2 - Generative Models.ipynb'
-  - runipy 'Intro Tutorial 3 - Neural Networks.ipynb'
+  - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
+  - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
+  - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
+  - python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+  - python 'Intro Tutorial 2 - Generative Models.py'
+  - python 'Intro Tutorial 3 - Neural Networks.py'
