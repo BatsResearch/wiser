@@ -43,8 +43,9 @@ jobs:
       - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
     - stage: Notebook 2
     - script: 
-      - cd data/output/generative/link_hmm
+      - cd data/output/tmp
       - ls
+      - cd ../../../
       - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
     - stage: Notebook 3
     - script: 
