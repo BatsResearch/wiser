@@ -8,8 +8,7 @@ install:
   - pip install -r requirements.txt
   - pip uninstall -y overrides
   - pip install overrides==3.1.0
-  - pip install runipy
-  - pip install scikit-learn==0.22.2
+  - pip install git+https://github.com/BatsResearch/labelmodels
   - pip install git+https://github.com/BatsResearch/wiser.git
 
 # command to run tests
