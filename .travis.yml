@@ -41,12 +41,14 @@ jobs:
     - stage: Notebook 1
     - script: 
       - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared ~/data 
     - stage: Notebook 2
     - script: 
-      - cd data/output/tmp
-      - ls
-      - cd ../../../
+      - aws s3 sync ~/data s3://travis-build-stages-shared-storage-test/shared
       - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
+      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared ~/data 
     - stage: Notebook 3
     - script: 
+      - aws s3 sync ~/data s3://travis-build-stages-shared-storage-test/shared
       - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
+      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared ~/data 
