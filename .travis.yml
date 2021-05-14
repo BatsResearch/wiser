@@ -19,10 +19,14 @@ install:
   - mkdir generative
   - cd generative
   - mkdir link_hmm
+  - mkdir naive_bayes
+  - mkdir hmm
   - cd ../
   - mkdir discriminative
   - cd discriminative
   - mkdir link_hmm
+  - mkdir naive_bayes
+  - mkdir hmm
   - cd ../../
 
 script:

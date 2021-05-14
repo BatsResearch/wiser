@@ -72,10 +72,10 @@ score_tagging_rules(dev_data)
 from wiser.eval import score_labels_majority_vote
 score_labels_majority_vote(dev_data)
 
-from labelmodels import LinkedHMM
+from labelmodels import HMM
 from wiser.generative import Model
 
-model = Model(LinkedHMM, init_acc=0.95, acc_prior=50, balance_prior=100)
+model = Model(HMM, init_acc=0.95, acc_prior=50, balance_prior=100)
 
 from labelmodels import LearningConfig
 
@@ -87,22 +87,22 @@ model.train(config, train_data=train_data, dev_data=dev_data)
 
 model.evaluate(test_data)
 
-model.save_output(data=train_data, path='output/generative/link_hmm/train_data.p', save_distribution=True)
-model.save_output(data=dev_data, path='output/generative/link_hmm/dev_data.p', save_distribution=True, save_tags=True)
-model.save_output(data=test_data, path='output/generative/link_hmm/test_data.p', save_distribution=True, save_tags=True)
+model.save_output(data=train_data, path='output/generative/hmm/train_data.p', save_distribution=True)
+model.save_output(data=dev_data, path='output/generative/hmm/dev_data.p', save_distribution=True, save_tags=True)
+model.save_output(data=test_data, path='output/generative/hmm/test_data.p', save_distribution=True, save_tags=True)
 
 from wiser.data.dataset_readers import weak_label   # You need to import weak_label and WiserCrfTagger
 from wiser.models import WiserCrfTagger             # since they are used in the training config. file
 from allennlp.commands.train import train_model_from_file
 
-train_model_from_file(parameter_filename='training_config/tutorial.jsonnet',
-                      serialization_dir='output/discriminative/link_hmm', 
+train_model_from_file(parameter_filename='training_config/UT2.jsonnet',
+                      serialization_dir='output/discriminative/hmm', 
                       file_friendly_logging=True, force=True)
 
 from allennlp.predictors.predictor import Predictor
 from allennlp.data.tokenizers.word_splitter import SpacyWordSplitter
 
-predictor = Predictor.from_path(archive_path='output/discriminative/link_hmm/model.tar.gz', 
+predictor = Predictor.from_path(archive_path='output/discriminative/hmm/model.tar.gz', 
                                 predictor_name='sentence-tagger')
 
 tokenizer = SpacyWordSplitter(language='en_core_web_sm', pos_tags=False)
