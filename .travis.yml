@@ -35,4 +35,4 @@ jobs:
   include:
     - stage: Notebook 1
     - script: 
-      - travis_wait 3000 python ../../../test/unit_tests/link_hmm.py
+      - travis_wait 3000 python ../../test/unit_tests/link_hmm.py
