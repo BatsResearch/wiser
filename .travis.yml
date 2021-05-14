@@ -11,9 +11,6 @@ install:
   - pip install git+https://github.com/BatsResearch/labelmodels
   - pip install git+https://github.com/BatsResearch/wiser.git
   - pip install scikit-learn==0.22.2
-
-# command to run tests
-script:
   - cd tutorials
   - cd introduction
   - mkdir output
@@ -30,6 +27,12 @@ script:
   - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
   - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
   - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
-  - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
-  - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
-  - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
+
+jobs:
+  include:
+    - stage: Notebook 1
+    - script: travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+    - stage: Notebook 2
+    - script: travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
+    - stage: Notebook 3
+    - script: travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
