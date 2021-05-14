@@ -28,6 +28,8 @@ install:
   - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
   - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
 
+script:
+  - skip
 
 jobs:
   include:
