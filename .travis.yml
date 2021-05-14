@@ -4,6 +4,7 @@ python:
 # command to install dependencies
 before_install:
   - pip install -U pip
+install:
   - pip install -r requirements.txt
   - pip uninstall -y overrides
   - pip install overrides==3.1.0
@@ -26,6 +27,12 @@ before_install:
   - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
   - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
   - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
+
+  - script: travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+
+  - script: travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
+
+  - script: travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
 
 jobs:
   include:
