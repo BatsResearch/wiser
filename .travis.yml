@@ -4,7 +4,6 @@ python:
 # command to install dependencies
 before_install:
   - pip install -U pip
-install:
   - pip install -r requirements.txt
   - pip uninstall -y overrides
   - pip install overrides==3.1.0
