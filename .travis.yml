@@ -33,10 +33,18 @@ script:
   - skip
 
 stages:
-  - Notebook 1
+  - LinkHMM Test
+  - HMM Test
+  - Naive Bayes Test
 
 jobs:
   include:
-    - stage: Notebook 1
+    - stage: LinkHMM Test
     - script: 
       - travis_wait 3000 python ../../test/unit_tests/link_hmm.py
+    - stage: HMM Test
+    - script: 
+      - travis_wait 3000 python ../../test/unit_tests/hmm.py
+      - stage: Naive Bayes Test
+    - script: 
+      - travis_wait 3000 python ../../test/unit_tests/naive_bayes.py
