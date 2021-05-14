@@ -24,32 +24,15 @@ install:
   - cd discriminative
   - mkdir link_hmm
   - cd ../../
-  - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
-  - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
-  - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
 
 script:
   - skip
 
 stages:
   - Notebook 1
-  - Notebook 2
-  - Notebook 3
 
 jobs:
   include:
     - stage: Notebook 1
     - script: 
-      - aws s3 sync data s3://travis-build-stages-shared-storage-test/shared
-      - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
-      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared data 
-    - stage: Notebook 2
-    - script: 
-      - aws s3 sync data s3://travis-build-stages-shared-storage-test/shared
-      - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
-      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared data 
-    - stage: Notebook 3
-    - script: 
-      - aws s3 sync data s3://travis-build-stages-shared-storage-test/shared
-      - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
-      - aws s3 sync s3://travis-build-stages-shared-storage-test/shared data 
+      - travis_wait 3000 python ../../../test/unit_tests/link_hmm.py
