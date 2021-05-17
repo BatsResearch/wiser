@@ -65,10 +65,11 @@ def get_generative_model_inputs(instances, label_to_ix):
         for name in sorted(doc['WISER_LABELS'].keys()):
             for j, vote in enumerate(doc['WISER_LABELS'][name]):
                 label_votes[offset + j, label_name_to_col[name]] = label_to_ix[vote]
-
-        for name in sorted(doc['WISER_LINKS'].keys()):
-            for j, vote in enumerate(doc['WISER_LINKS'][name]):
-                link_votes[offset + j, link_name_to_col[name]] = vote
+        
+        if 'WISER_LINKS' in doc:
+            for name in sorted(doc['WISER_LINKS'].keys()):
+                for j, vote in enumerate(doc['WISER_LINKS'][name]):
+                    link_votes[offset + j, link_name_to_col[name]] = vote
 
         offset += len(doc['tokens'])
 
