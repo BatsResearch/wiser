@@ -85,7 +85,7 @@
     },
     "validation_metric": "+f1-measure-overall",
     "num_serialized_models_to_keep": 3,
-    "num_epochs": 50,
+    "num_epochs": 10,
     "grad_norm": 5.0,
     "patience": 10,
     "cuda_device": -1 // Change to 0 if you have a CUDA device
