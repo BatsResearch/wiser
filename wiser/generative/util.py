@@ -68,8 +68,9 @@ def train_generative_model(model, train_data, dev_data, label_to_ix, config):
     best_r = float('-inf')
     best_f1 = float('-inf')
     best_params = None
-
-    for i in range(config.epochs):
+    epochs = config.epochs
+    config.epochs = 1    
+    for i in range(epochs):
         model.estimate_label_model(*train_inputs, config=config)
         results = evaluate_generative_model(model, dev_data, label_to_ix)
 
@@ -80,7 +81,7 @@ def train_generative_model(model, train_data, dev_data, label_to_ix, config):
             best_params = copy.deepcopy(model.state_dict())
 
     model.load_state_dict(best_params)
-
+    config.epochs = epochs
     return best_p, best_r, best_f1
 
 
