@@ -56,10 +56,10 @@ jobs:
 
     - stage: Notebook Test
     - script: 
-      - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules'
-      - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models'
-      - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks'
-      - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules'
-      - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models'
-      - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks'
+      - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
+      - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
+      - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
+      - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+      - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
+      - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
 
