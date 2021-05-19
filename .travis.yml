@@ -62,3 +62,4 @@ jobs:
       - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules'
       - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models'
       - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks'
+      
