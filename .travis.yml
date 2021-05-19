@@ -7,11 +7,7 @@ before_install:
   
 install:
   - pip install -r requirements.txt
-  - pip uninstall -y overrides
-  - pip install overrides==3.1.0
-  - pip install git+https://github.com/BatsResearch/labelmodels
   - pip install git+https://github.com/BatsResearch/wiser.git
-  - pip install scikit-learn==0.22.2
   - cd tutorials
   - cd introduction
   - mkdir output
@@ -37,6 +33,8 @@ stages:
   - LinkHMM Test
   - HMM Test
   - Naive Bayes Test
+  - RCF Test
+  - Notebook Test
 
 jobs:
   include:
@@ -51,3 +49,16 @@ jobs:
     - stage: Naive Bayes Test
     - script: 
       - travis_wait 3000 python ../../test/unit_tests/naive_bayes.py
+
+    - stage: RCF Test
+    - script: 
+      - travis_wait 3000 python ../../test/modules/test_conditional_random_field.py
+
+    - stage: Notebook Test
+    - script: 
+      - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules'
+      - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models'
+      - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks'
+      - travis_wait 3000 python 'Intro Tutorial 1 - Tagging and Linking Rules'
+      - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models'
+      - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks'

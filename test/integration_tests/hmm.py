@@ -95,7 +95,7 @@ from wiser.data.dataset_readers import weak_label   # You need to import weak_la
 from wiser.models import WiserCrfTagger             # since they are used in the training config. file
 from allennlp.commands.train import train_model_from_file
 
-train_model_from_file(parameter_filename='training_config/UT2.jsonnet',
+train_model_from_file(parameter_filename='../../test/integration_tests/IT2.jsonnet',
                       serialization_dir='output/discriminative/hmm', 
                       file_friendly_logging=True, force=True)
 
