@@ -63,7 +63,7 @@ jobs:
       # - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
       # - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
       # - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
-      - runipy 'Intro Tutorial 1 - Tagging and Linking Rules.py'
-      - travis_wait 3000 runipy 'Intro Tutorial 2 - Generative Models.py'
-      - travis_wait 3000 runipy 'Intro Tutorial 3 - Neural Networks.py'
+      - runipy 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
+      - travis_wait 3000 runipy 'Intro Tutorial 2 - Generative Models.ipynb'
+      - travis_wait 3000 runipy 'Intro Tutorial 3 - Neural Networks.ipynv'
 
