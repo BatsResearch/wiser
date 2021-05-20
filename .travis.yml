@@ -11,7 +11,7 @@ before_install:
 install:
   - pip install -r requirements.txt
   - pip install git+https://github.com/BatsResearch/wiser.git
-  - pip install runipy
+  - pip install allennlp==0.9.0
   - cd tutorials
   - cd introduction
   - mkdir output
