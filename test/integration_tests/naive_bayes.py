@@ -6,7 +6,9 @@ dev_data = dataset_reader.read('data/wikipedia/labeled_dev.csv')
 test_data = dataset_reader.read('data/wikipedia/labeled_test.csv')
 
 # In this tutorial we will use only 750 instances of the training data
-train_data = train_data[:30]
+train_data = train_data[:10]
+dev_data = dev_data[:10]
+test_data = test_data[:10]
 
 # We must merge all partitions to apply the rules
 data = train_data + dev_data + test_data

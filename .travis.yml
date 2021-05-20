@@ -34,29 +34,29 @@ script:
   - skip
 
 stages:
-  # - LinkHMM Test
-  # - HMM Test
-  # - Naive Bayes Test
-  # - RCF Test
+  - LinkHMM Test
+  - HMM Test
+  - Naive Bayes Test
+  - RCF Test
   - Notebook Test
 
 jobs:
   include:
-    # - stage: LinkHMM Test
-    # - script: 
-    #   - travis_wait 3000 python ../../test/unit_tests/link_hmm.py
+    - stage: LinkHMM Test
+    - script: 
+      - travis_wait 3000 python ../../test/unit_tests/link_hmm.py
       
-    # - stage: HMM Test
-    # - script: 
-    #   - travis_wait 3000 python ../../test/unit_tests/hmm.py
+    - stage: HMM Test
+    - script: 
+      - travis_wait 3000 python ../../test/unit_tests/hmm.py
 
-    # - stage: Naive Bayes Test
-    # - script: 
-    #   - travis_wait 3000 python ../../test/unit_tests/naive_bayes.py
+    - stage: Naive Bayes Test
+    - script: 
+      - travis_wait 3000 python ../../test/unit_tests/naive_bayes.py
 
-    # - stage: RCF Test
-    # - script: 
-    #   - travis_wait 3000 python ../../test/modules/test_conditional_random_field.py
+    - stage: RCF Test
+    - script: 
+      - travis_wait 3000 python ../../test/modules/test_conditional_random_field.py
 
     - stage: Notebook Test
     - script: 
