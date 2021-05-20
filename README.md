@@ -1,10 +1,10 @@
 # WISER
 
-[![Build Status](https://travis-ci.com/BatsResearch/wiser.svg?branch=master)](https://travis-ci.com/BatsResearch/wiser)
 
 Welcome to WISER (*Weak and Indirect Supervision for Entity Recognition*), a system for training sequence tagging models, particularly neural networks for named entity recognition (NER) and related tasks. WISER uses *weak supervision* in the form of rules to train these models, as opposed to hand-labeled training data.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://travis-ci.com/BatsResearch/wiser.svg?branch=master)](https://travis-ci.com/BatsResearch/wiser)
 
 The original WISER paper can be accessed [here](http://cs.brown.edu/people/sbach/files/safranchik-aaai20.pdf).
 
