@@ -9,9 +9,8 @@ before_install:
   - pip install -U pip 
   
 install:
-  - pip install -r requirements.txt
   - pip install git+https://github.com/BatsResearch/wiser.git
-  - pip install allennlp==0.9.0
+  - pip install -r newReqs.txt
   - cd tutorials
   - cd introduction
   - mkdir output
