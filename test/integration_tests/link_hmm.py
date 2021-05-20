@@ -6,7 +6,9 @@ dev_data = dataset_reader.read('data/wikipedia/labeled_dev.csv')
 test_data = dataset_reader.read('data/wikipedia/labeled_test.csv')
 
 # In this tutorial we will use only 750 instances of the training data
-train_data = train_data[:300]
+train_data = train_data[:10]
+dev_data = dev_data[:10]
+test_data = test_data[:10]
 
 # We must merge all partitions to apply the rules
 data = train_data + dev_data + test_data
@@ -95,7 +97,7 @@ from wiser.data.dataset_readers import weak_label   # You need to import weak_la
 from wiser.models import WiserCrfTagger             # since they are used in the training config. file
 from allennlp.commands.train import train_model_from_file
 
-train_model_from_file(parameter_filename='training_config/tutorial.jsonnet',
+train_model_from_file(parameter_filename='../../test/integration_tests/IT1.jsonnet',
                       serialization_dir='output/discriminative/link_hmm', 
                       file_friendly_logging=True, force=True)
 

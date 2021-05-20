@@ -20,9 +20,9 @@
       },
     },
   },
-  "train_data_path": "output/generative/hmm/train_data.p",         // If necessary, change to your own data path
-  "validation_data_path": "output/generative/hmm/dev_data.p",
-  "test_data_path": "output/generative/hmm/test_data.p",
+  "train_data_path": "output/generative/link_hmm/train_data.p",         // If necessary, change to your own data path
+  "validation_data_path": "output/generative/link_hmm/dev_data.p",
+  "test_data_path": "output/generative/link_hmm/test_data.p",
   "evaluate_on_test": true,
   "model": {
     "type": "wiser_crf_tagger",
@@ -85,7 +85,7 @@
     },
     "validation_metric": "+f1-measure-overall",
     "num_serialized_models_to_keep": 3,
-    "num_epochs": 50,
+    "num_epochs": 10,
     "grad_norm": 5.0,
     "patience": 10,
     "cuda_device": -1 // Change to 0 if you have a CUDA device
