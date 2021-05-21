@@ -5,7 +5,7 @@ from typing import Iterator, Dict, List
 from allennlp.data.fields import ArrayField, TextField, SequenceLabelField
 from allennlp.data.tokenizers import Token
 import pickle
-
+import os
 
 @DatasetReader.register('weak_label')
 class WeakLabelDatasetReader(DatasetReader):
@@ -29,68 +29,84 @@ class WeakLabelDatasetReader(DatasetReader):
 
     def _read(self, file_path: str) -> Iterator[Instance]:
 
-        with open(file_path, 'rb') as f:
-            data = pickle.load(f)
+        if(os.path.isdir(file_path)):
 
-        if not self.split_sentences:
-            for instance in data:
-                tokens = [token for token in instance['tokens']]
-                tokens_field = TextField(tokens, self.token_indexers)
-                instance.add_field('tokens', tokens_field)
+            for filename in os.listdir(file_path):
+                datapath = os.path.join(file_path, filename)
+
+                instance = instanceCreator(datapath, self.token_indexers, self.split_sentences)
                 yield instance
+
         else:
-            for instance in data:
-                if 'sentence_spans' not in instance:
-                    raise ValueError("No sentence spans detected in the dataset "
-                                     "you're attempting to read. "
-                                     "Did you forget to generate them?")
+            instance = instanceCreator(file_path, self.token_indexers, self.split_sentences)
+            yield instance
 
-                tokens_field = instance['tokens']
-                tags_field = instance['tags'] if 'tags' in instance else None
-                unary_marginals_field = instance['unary_marginals'] if 'unary_marginals' in instance else None
-                pairwise_marginals_field = instance['pairwise_marginals'] if 'pairwise_marginals' in instance else None
-                vote_mask_field = instance['vote_mask'] if 'vote_mask' in instance else None
 
-                tokens = [token for token in tokens_field]
-                tags = [tag for tag in tags_field]
-                unary_marginals, pairwise_marginals, vote_mask = [None, None, None]
 
-                if unary_marginals_field:
-                    unary_marginals = unary_marginals_field.as_tensor(unary_marginals_field.get_padding_lengths()).numpy()
-                if pairwise_marginals_field:
-                    pairwise_marginals = pairwise_marginals_field.as_tensor(pairwise_marginals_field.get_padding_lengths()).numpy()
-                if vote_mask_field:
-                    vote_mask = vote_mask_field.as_tensor(vote_mask_field.get_padding_lengths()).numpy()
+def instanceCreator(file_path, token_indexers, split_sentences):
 
-                sentence_delimiters = instance['sentence_spans'].metadata
+    with open(file_path, 'rb') as f:
+        data = pickle.load(f)
 
-                for delimiter in sentence_delimiters:
-                    sentence_tokens = tokens[delimiter[0]:delimiter[1]]
+    if not split_sentences:
+        for instance in data:
+            tokens = [token for token in instance['tokens']]
+            tokens_field = TextField(tokens, token_indexers)
+            instance.add_field('tokens', tokens_field)
+            return instance
+    else:
+        for instance in data:
+            if 'sentence_spans' not in instance:
+                raise ValueError("No sentence spans detected in the dataset "
+                                "you're attempting to read. "
+                                "Did you forget to generate them?")
 
-                    if len(sentence_tokens) == 0:
-                        continue
+            tokens_field = instance['tokens']
+            tags_field = instance['tags'] if 'tags' in instance else None
+            unary_marginals_field = instance['unary_marginals'] if 'unary_marginals' in instance else None
+            pairwise_marginals_field = instance['pairwise_marginals'] if 'pairwise_marginals' in instance else None
+            vote_mask_field = instance['vote_mask'] if 'vote_mask' in instance else None
 
-                    sentence_tokens_field = TextField(sentence_tokens, self.token_indexers)
-                    fields = {"tokens": sentence_tokens_field}
+            tokens = [token for token in tokens_field]
+            tags = [tag for tag in tags_field]
+            unary_marginals, pairwise_marginals, vote_mask = [None, None, None]
 
-                    if tags is not None:
-                        sentence_tags =tags[delimiter[0]:delimiter[1]]
-                        assert len(sentence_tags) == len(sentence_tokens)
-                        fields["tags"] = SequenceLabelField(labels=sentence_tags, sequence_field=sentence_tokens_field)
+            if unary_marginals_field:
+                unary_marginals = unary_marginals_field.as_tensor(unary_marginals_field.get_padding_lengths()).numpy()
+            if pairwise_marginals_field:
+                pairwise_marginals = pairwise_marginals_field.as_tensor(pairwise_marginals_field.get_padding_lengths()).numpy()
+            if vote_mask_field:
+                vote_mask = vote_mask_field.as_tensor(vote_mask_field.get_padding_lengths()).numpy()
 
-                    if unary_marginals is not None:
-                        sentence_unary_marginals = unary_marginals[delimiter[0]:delimiter[1]]
-                        assert len(sentence_unary_marginals) == len(sentence_tokens)
-                        fields['unary_marginals'] = ArrayField(sentence_unary_marginals)
+            sentence_delimiters = instance['sentence_spans'].metadata
 
-                    if pairwise_marginals is not None:
-                        sentence_pairwise_marginals = pairwise_marginals[delimiter[0]:delimiter[1]]
-                        assert len(sentence_pairwise_marginals) == len(sentence_tokens)
-                        fields['pairwise_marginals'] = ArrayField(sentence_pairwise_marginals)
+            for delimiter in sentence_delimiters:
+                sentence_tokens = tokens[delimiter[0]:delimiter[1]]
 
-                    if vote_mask is not None:
-                        sentence_vote_mask = vote_mask[delimiter[0]:delimiter[1]]
-                        assert len(sentence_vote_mask) == len(sentence_tokens)
-                        fields["vote_mask"] = ArrayField(sentence_vote_mask)
+                if len(sentence_tokens) == 0:
+                    continue
 
-                    yield Instance(fields)
+                sentence_tokens_field = TextField(sentence_tokens, token_indexers)
+                fields = {"tokens": sentence_tokens_field}
+
+                if tags is not None:
+                    sentence_tags =tags[delimiter[0]:delimiter[1]]
+                    assert len(sentence_tags) == len(sentence_tokens)
+                    fields["tags"] = SequenceLabelField(labels=sentence_tags, sequence_field=sentence_tokens_field)
+
+                if unary_marginals is not None:
+                    sentence_unary_marginals = unary_marginals[delimiter[0]:delimiter[1]]
+                    assert len(sentence_unary_marginals) == len(sentence_tokens)
+                    fields['unary_marginals'] = ArrayField(sentence_unary_marginals)
+
+                if pairwise_marginals is not None:
+                    sentence_pairwise_marginals = pairwise_marginals[delimiter[0]:delimiter[1]]
+                    assert len(sentence_pairwise_marginals) == len(sentence_tokens)
+                    fields['pairwise_marginals'] = ArrayField(sentence_pairwise_marginals)
+
+                if vote_mask is not None:
+                    sentence_vote_mask = vote_mask[delimiter[0]:delimiter[1]]
+                    assert len(sentence_vote_mask) == len(sentence_tokens)
+                    fields["vote_mask"] = ArrayField(sentence_vote_mask)
+
+                return Instance(fields)
