@@ -3,7 +3,7 @@
 # `conda install --file requirements.txt`
 # to ensure that you can use all WISER code.
 
-allennlp==0.8.4
+allennlp==0.9.0
 pandas==0.25.3
 pickleshare==0.7.5
 ipython==7.11.1
