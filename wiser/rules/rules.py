@@ -1,6 +1,21 @@
-class LabelingFunction:
+from tqdm.auto import tqdm
+
+
+def remove_rule(data, name):
+    """
+    Removes a tagging or linking rule from a given dataset
+    """
+
+    for instance in data:
+        if name in instance['WISER_LABELS']:
+            del instance['WISER_LABELS'][name]
+        if name in instance['WISER_LINKS']:
+            del instance['WISER_LINKS'][name]
+
+
+class TaggingRule:
     def apply(self, instances):
-        for instance in instances:
+        for instance in tqdm(instances):
             # Initializes metadata field
             if self._get_metadata_field() not in instance:
                 instance.add_field(self._get_metadata_field(), {})
@@ -9,7 +24,7 @@ class LabelingFunction:
             labels = self.apply_instance(instance)
 
             # Stores the labels in the instance
-            instance[self._get_metadata_field()][self._get_lf_name()] = labels
+            instance[self._get_metadata_field()][self._get_tr_name()] = labels
 
     def apply_instance(self, instance):
         raise NotImplementedError
@@ -17,11 +32,11 @@ class LabelingFunction:
     def _get_metadata_field(self):
         return "WISER_LABELS"
 
-    def _get_lf_name(self):
+    def _get_tr_name(self):
         return type(self).__name__
 
 
-class LinkingFunction(LabelingFunction):
+class LinkingRule(TaggingRule):
     def apply_instance(self, instance):
         raise NotImplementedError
 
@@ -29,7 +44,7 @@ class LinkingFunction(LabelingFunction):
         return "WISER_LINKS"
 
 
-class DictionaryMatcher(LabelingFunction):
+class DictionaryMatcher(TaggingRule):
     def __init__(self, name, terms, uncased=False, match_lemmas=False, i_label="I", abs_label="ABS"):
         self.name = name
         self.uncased = uncased
@@ -94,7 +109,7 @@ class DictionaryMatcher(LabelingFunction):
 
         return labels
 
-    def _get_lf_name(self):
+    def _get_tr_name(self):
         return self.name
 
     def _normalize_instance_tokens(self, tokens, lemmas=False):

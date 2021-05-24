@@ -1,6 +1,6 @@
 import itertools
 import os
-from .lf import DictionaryMatcher
+from .rules import DictionaryMatcher
 
 
 class UMLSMatcher(DictionaryMatcher):
@@ -35,7 +35,7 @@ class UMLSMatcher(DictionaryMatcher):
         # e.g., "cancer ovarian" -> "ovarian cancer"
         self._expand_terms(terms)
 
-        # Finished intializing the labeling function
+        # Finished intializing the tagging rule
         super(UMLSMatcher, self).__init__(
             name, terms, match_lemmas=True, i_label=i_label, abs_label=abs_label)
 

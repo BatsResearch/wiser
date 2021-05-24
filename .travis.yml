@@ -1,0 +1,68 @@
+language: python
+python:
+  - "3.7"
+
+env:
+  - CI = 1
+# command to install dependencies
+before_install:
+  - pip install -U pip 
+  
+install:
+  - pip install -r requirements.txt
+  - pip install git+https://github.com/BatsResearch/wiser.git
+  - cd tutorials
+  - cd introduction
+  - mkdir output
+  - cd output
+  - mkdir tmp
+  - mkdir generative
+  - cd generative
+  - mkdir link_hmm
+  - mkdir naive_bayes
+  - mkdir hmm
+  - cd ../
+  - mkdir discriminative
+  - cd discriminative
+  - mkdir link_hmm
+  - mkdir naive_bayes
+  - mkdir hmm
+  - cd ../../
+
+script:
+  - skip
+
+stages:
+  - LinkHMM Test
+  - HMM Test
+  - Naive Bayes Test
+  - RCF Test
+  - Notebook Test
+
+jobs:
+  include:
+    - stage: LinkHMM Test
+    - script: 
+      - travis_wait 3000 python ../../test/integration_tests/link_hmm.py
+      
+    - stage: HMM Test
+    - script: 
+      - travis_wait 3000 python ../../test/integration_tests/hmm.py
+
+    - stage: Naive Bayes Test
+    - script: 
+      - travis_wait 3000 python ../../test/integration_tests/naive_bayes.py
+
+    - stage: RCF Test
+    - script: 
+      - travis_wait 3000 python ../../test/modules/test_conditional_random_field.py
+
+    - stage: Notebook Test
+    - script: 
+      - jupyter nbconvert --to script 'Intro Tutorial 1 - Tagging and Linking Rules.ipynb'
+      - jupyter nbconvert --to script 'Intro Tutorial 2 - Generative Models.ipynb'
+      - jupyter nbconvert --to script 'Intro Tutorial 3 - Neural Networks.ipynb'
+      - python 'Intro Tutorial 1 - Tagging and Linking Rules.py'
+      - travis_wait 3000 python 'Intro Tutorial 2 - Generative Models.py'
+      - travis_wait 3000 python 'Intro Tutorial 3 - Neural Networks.py'
+

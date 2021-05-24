@@ -26,9 +26,61 @@ def score_labels_majority_vote(instances,  gold_label_key='tags',
     return results
 
 
+def get_generative_model_inputs(instances, label_to_ix):
+    label_name_to_col = {}
+    link_name_to_col = {}
+
+    # Collects label and link function names
+    names = set()
+    for doc in instances:
+        if 'WISER_LABELS' in doc:
+            for name in doc['WISER_LABELS']:
+                names.add(name)
+    for name in sorted(names):
+        label_name_to_col[name] = len(label_name_to_col)
+
+    names = set()
+    for doc in instances:
+        if 'WISER_LINKS' in doc:
+            for name in doc['WISER_LINKS']:
+                names.add(name)
+    for name in sorted(names):
+        link_name_to_col[name] = len(link_name_to_col)
+
+    # Counts total tokens
+    total_tokens = 0
+    for doc in instances:
+        total_tokens += len(doc['tokens'])
+
+    # Initializes output data structures
+    label_votes = np.zeros((total_tokens, len(label_name_to_col)), dtype=np.int)
+    link_votes = np.zeros((total_tokens, len(link_name_to_col)), dtype=np.int)
+    seq_starts = np.zeros((len(instances),), dtype=np.int)
+
+    # Populates outputs
+    offset = 0
+    for i, doc in enumerate(instances):
+        seq_starts[i] = offset
+
+        for name in sorted(doc['WISER_LABELS'].keys()):
+            for j, vote in enumerate(doc['WISER_LABELS'][name]):
+                label_votes[offset + j, label_name_to_col[name]] = label_to_ix[vote]
+        
+        if 'WISER_LINKS' in doc:
+            for name in sorted(doc['WISER_LINKS'].keys()):
+                for j, vote in enumerate(doc['WISER_LINKS'][name]):
+                    link_votes[offset + j, link_name_to_col[name]] = vote
+
+        offset += len(doc['tokens'])
+
+    return label_votes, link_votes, seq_starts
+
+
 def score_predictions(instances, predictions,
                       gold_label_key='tags', span_level=True):
+
     tp, fp, fn = 0, 0, 0
+
     offset = 0
     for instance in instances:
         length = len(instance[gold_label_key])
@@ -56,7 +108,7 @@ def score_predictions(instances, predictions,
     return results
 
 
-def score_labeling_functions(instances, gold_label_key='tags'):
+def score_tagging_rules(instances, gold_label_key='tags'):
     lf_scores = {}
     for instance in instances:
         for lf_name, predictions in instance['WISER_LABELS'].items():
@@ -89,7 +141,7 @@ def score_labeling_functions(instances, gold_label_key='tags'):
     return results
 
 
-def score_linking_functions(instances, gold_label_keys='tags'):
+def score_linking_rules(instances, gold_label_keys='tags'):
     lf_scores = {}
     for instance in instances:
         for lf_name, predictions in instance['WISER_LINKS'].items():
@@ -114,8 +166,11 @@ def score_linking_functions(instances, gold_label_keys='tags'):
                         lf_scores[lf_name][2] += 1
 
     for counts in lf_scores.values():
-        counts.append(round(
-            (counts[0] + counts[1]) / (counts[0] + counts[1] + counts[2]), ndigits=4))
+        if counts[0] + counts[1] + counts[2] == 0:
+            counts.append(float('NaN'))
+        else:
+            counts.append(round(
+                (counts[0] + counts[1]) / (counts[0] + counts[1] + counts[2]), ndigits=4))
 
     # Collects results into a dataframe
     column_names = ["Entity Links", "Non-Entity Links", "Incorrect Links", "Accuracy"]

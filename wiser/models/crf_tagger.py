@@ -27,7 +27,8 @@ class WiserCrfTagger(CrfTagger):
                  dropout: Optional[float] = None,
                  verbose_metrics: bool = False,
                  initializer: InitializerApplicator = InitializerApplicator(),
-                 regularizer: Optional[RegularizerApplicator] = None) -> None:
+                 regularizer: Optional[RegularizerApplicator] = None,
+                 use_tags: str = False) -> None:
 
         super().__init__(vocab, text_field_embedder, encoder,
                          label_namespace, feedforward, label_encoding,
@@ -50,6 +51,11 @@ class WiserCrfTagger(CrfTagger):
             self.num_tags, constraints,
             include_start_end_transitions=include_start_end_transitions
         )
+
+        if use_tags == 'True':
+            self.use_tags = True
+        else:
+            self.use_tags = False
 
     @overrides
     def forward(self,  # type: ignore
@@ -93,8 +99,16 @@ class WiserCrfTagger(CrfTagger):
                                                               unary_marginals=unary_marginals,
                                                               pairwise_marginals=pairwise_marginals)
 
+        if not self.use_tags:
+            if unary_marginals is not None:
+                ell = self.crf.expected_log_likelihood(logits=logits,
+                                                    mask=mask,
+                                                    unary_marginals=unary_marginals,
+                                                    pairwise_marginals=pairwise_marginals)
+                output["loss"] = -ell
+
         if tags is not None:
-            if unary_marginals is None:
+            if unary_marginals is None or self.use_tags:
                 log_likelihood = self.crf(logits, tags, mask)
                 output['loss'] = -log_likelihood
 
