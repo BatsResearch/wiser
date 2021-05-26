@@ -3,6 +3,99 @@ from allennlp.modules.conditional_random_field import ConditionalRandomField
 
 
 class WiserConditionalRandomField(ConditionalRandomField):
+
+    def construct_pairwise_marginals(self, unary_marginals):
+        """
+       Given a tensor of unary marginals and a mask, returns the pairwise_marginals by multiplying adjacent
+       unary marginals. This method assumes independence between adjacent terms, similar to naive Bayes.
+
+       Parameters
+       ----------
+       unary_marginals : ``tensor``, required
+           The (batch_size, seq_len, num_tags, num_tags) tensor of unary marginals.
+
+       Returns
+       -------
+           A torch.Tensor of size (batch_size, seq_len, num_tags, num_tags) containing
+           the pariwise marginals derived from the unary marginals.
+       """
+
+        pairwise_marginals = torch.einsum('ijk, ijl -> ijkl',
+                                          unary_marginals[:, :-1, :], unary_marginals[:, 1:, :])
+        return torch.cat((pairwise_marginals, torch.zeros(64, 1, 5, 5)), 1)
+
+    def batch_start_transitions(self, unary_marginals):
+        """
+        Given a tensor of unary marginals, returns the batch start transitions.
+
+        Parameters
+        ----------
+        unary_marginals : ``tensor``, required
+            The (batch_size, seq_len, num_tags) tensor of unary marginals.
+
+        Returns
+        -------
+            A torch.Tensor of size (batch_size,) containing end transitions for each batch.
+        """
+        return torch.mv(unary_marginals[:, 0, :], self.start_transitions)
+
+    def batch_end_transitions(self, unary_marginals, mask):
+        """
+        Given a tensor of unary marginals and a mask, returns the batch end transitions
+
+        Parameters
+        ----------
+        unary_marginals : ``tensor``, required
+            The (batch_size, seq_len, num_tags) tensor of unary marginals.
+
+        mask : ``tensor``, required
+            The (batch_size, seq_len) mask of tokens
+
+        Returns
+        -------
+            A torch.Tensor of size (batch_size,) containing end transitions for each batch
+        """
+        batch_size = unary_marginals.size(0)
+        ix0 = torch.arange(0, batch_size, dtype=torch.long)
+        ix1 = mask.sum(-1).long() - 1
+        return torch.mv(unary_marginals[ix0, ix1, :], self.end_transitions)
+
+    def batch_unary_marginals(self, logits, unary_marginals, mask):
+        """
+       Given a tensor of unary marginals, the logits, and a mask, returns the batch unary_marginals.
+
+       Parameters
+       ----------
+       logits : ``tensor``, required
+            The (batch_size, seq_len, num_tags) tensor containing the logits.
+       unary_marginals : ``tensor``, required
+           The (batch_size, seq_len, num_tags) tensor of unary marginals.
+       mask : ``tensor``, required
+           The (batch_size, seq_len) mask of tokens.
+       Returns
+       -------
+           A torch.Tensor of size (batch_size,) containing the unary marginals for each batch.
+       """
+        return torch.einsum('ij, ij -> i',
+                            (unary_marginals * logits).sum(-1), mask)
+
+    def batch_pairwise_marginals(self, pairwise_marginals, mask):
+        """
+        Given a tensor of pairwise marginals and a mask, returns the batch pairwise_marginals.
+
+        Parameters
+        ----------
+        pairwise_marginals : ``tensor``, required
+            The (batch_size, seq_len, num_tags, num_tags) tensor of pairwise marginals.
+        mask : ``tensor``, required
+            The (batch_size, seq_len) mask of tokens.
+        Returns
+        -------
+            A torch.Tensor of size (batch_size,) containing end transitions for each batch.
+        """
+        return (torch.einsum('ijkl, kl -> ij', pairwise_marginals,
+                             self.transitions)[:, :-1] * mask[:, 1:]).sum(-1)
+
     def expected_log_likelihood(
             self,
             logits: torch.Tensor,
@@ -36,73 +129,19 @@ class WiserConditionalRandomField(ConditionalRandomField):
             The text field mask for the input tokens of shape
             ``(batch_size, seq_len)``.
         """
-        batch_size, seq_len, num_tags = logits.size()
 
-        # We compute the partition function before rearranging the inputs
+        mask = mask.float()
+
+        if pairwise_marginals is None:
+            pairwise_marginals = self.construct_pairwise_marginals(
+                unary_marginals)
+
+        score = self.batch_start_transitions(unary_marginals)
+        score += self.batch_unary_marginals(logits, unary_marginals, mask)
+        score += self.batch_pairwise_marginals(pairwise_marginals, mask)
+        score += self.batch_end_transitions(unary_marginals, mask)
+
         partition = self._input_likelihood(logits, mask)
-        # Transpose batch size and sequence dimensions
-        logits = logits.transpose(0, 1).contiguous()                 # (seq_len, batch_size, num_tags)
-        mask = mask.float().transpose(0, 1).contiguous()             # (seq_len, batch_size)
 
-        unary_marginals = unary_marginals.transpose(0, 1)            # (seq_len, batch_size, num_tags)
-        unary_marginals = unary_marginals.contiguous()
-        if pairwise_marginals is not None:
-            pairwise_marginals = pairwise_marginals.transpose(0, 1)  # (seq_len - 1, batch_size, num_tags, num_tags)
-            pairwise_marginals = pairwise_marginals.contiguous()
-        else:
-            pairwise_marginals = torch.zeros(
-                                    (seq_len - 1, batch_size, num_tags, num_tags),
-                                    device=logits.device.type)
-
-            for i in range(seq_len - 1):
-                for j in range(batch_size):
-                    temp1 = unary_marginals[i, j]
-                    temp2 = unary_marginals[i+1, j]
-                    temp = torch.ger(temp1, temp2)
-                    pairwise_marginals[i, j, :, :] = temp
-
-        # Start with the transition scores from start_tag to the
-        # first tag in each input
-        if self.include_start_end_transitions:
-            temp = self.start_transitions.unsqueeze(0)               # (1, num_tags)
-            temp = temp * unary_marginals[0]                         # (batch_size, num_tags)
-            score = temp.sum(dim=1)                                  # (batch_size,)
-        else:
-            score = torch.zeros((batch_size,), device=logits.device.type) # (batch_size,)
-
-        # Add up the scores for the expected transitions and all
-        # the inputs but the last
-        for i in range(seq_len - 1):
-            # Adds contributions from logits
-            temp = logits[i] * unary_marginals[i]                    # (batch_size, num_tags)
-            temp = temp.sum(dim=1)                                   # (batch_size,)
-            score += temp * mask[i]
-
-            # Adds contributions from transitions from i to i+1
-            temp = self.transitions.unsqueeze(0)                     # (1, num_tags, num_tags)
-            temp = temp * pairwise_marginals[i]                      # (batch_size, num_tags, num_tags)
-            temp = temp.sum(dim=2).sum(dim=1)                        # (batch_size,)
-            score += temp * mask[i+1]
-
-        # Transition from last state to "stop" state.
-        # Computes score of transitioning to `stop_tag` from
-        # each last token.
-        if self.include_start_end_transitions:
-            # To start, we need to find the last token for
-            # each instance.
-            index0 = mask.sum(dim=0).long() - 1                      # (batch_size,)
-            index1 = torch.arange(0, batch_size, dtype=torch.long)   # (batch_size,)
-            last_marginals = unary_marginals[index0, index1, :]      # (batch_size, num_tags)
-
-            temp = self.end_transitions.unsqueeze(0)                 # (1, num_tags)
-            temp = temp * last_marginals                             # (batch_size, num_tags)
-            temp = temp.sum(dim=1)                                   # (batch_size,)
-            score += temp
-
-        # Adds the last input if it's not masked.
-        last_scores = logits[-1] * unary_marginals[-1]               # (batch_size, num_tags)
-        last_scores = last_scores.sum(dim=1)                         # (batch_size,)
-        score += last_scores * mask[-1]
-
-        # Finally we subtract partition function and return sum
+        # Subtracts partition function and returns sum
         return torch.sum(score - partition)
