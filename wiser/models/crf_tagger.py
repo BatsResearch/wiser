@@ -35,10 +35,8 @@ class WiserCrfTagger(CrfTagger):
                          include_start_end_transitions, constrain_crf_decoding, calculate_span_f1,
                          dropout, verbose_metrics, initializer, regularizer)
 
-        """
-        Gets the kwargs needs to initialize the WISER CRF. We skip some
-        configuration checks that are checked in the super constructor
-        """
+        # Gets the kwargs needs to initialize the WISER CRF. We skip some
+        # configuration checks that are checked in the super constructor
         if constrain_crf_decoding:
             labels = self.vocab.get_index_to_token_vocabulary(
                 self.label_namespace)
@@ -62,9 +60,12 @@ class WiserCrfTagger(CrfTagger):
                 tokens: Dict[str, torch.LongTensor],
                 tags: torch.LongTensor = None,
                 metadata: List[Dict[str, Any]] = None,
+                # pylint: disable=unused-argument
                 **kwargs) -> Dict[str, torch.Tensor]:
+        # pylint: disable=arguments-differ
         """
         Same signature as parent class's forward() method.
+
         Only difference is that loss is computed as the expected log likelihood
         using metadata, rather than tags.
         """
@@ -93,12 +94,6 @@ class WiserCrfTagger(CrfTagger):
         unary_marginals = kwargs.get('unary_marginals')
         pairwise_marginals = kwargs.get('pairwise_marginals')
 
-        if unary_marginals is not None:
-            output["loss"] = self.crf.expected_log_likelihood(logits=logits,
-                                                              mask=mask,
-                                                              unary_marginals=unary_marginals,
-                                                              pairwise_marginals=pairwise_marginals)
-
         if not self.use_tags:
             if unary_marginals is not None:
                 ell = self.crf.expected_log_likelihood(logits=logits,
@@ -106,18 +101,18 @@ class WiserCrfTagger(CrfTagger):
                                                     unary_marginals=unary_marginals,
                                                     pairwise_marginals=pairwise_marginals)
                 output["loss"] = -ell
-
+                
         if tags is not None:
             if unary_marginals is None or self.use_tags:
                 log_likelihood = self.crf(logits, tags, mask)
                 output['loss'] = -log_likelihood
 
-            # Represent viterbi tags as "class probabilities" that we can feed into the metrics
-            class_probabilities = torch.zeros(logits.shape)
+            # Represent viterbi tags as "class probabilities" that we can
+            # feed into the metrics
+            class_probabilities = logits * 0.
             for i, instance_tags in enumerate(predicted_tags):
                 for j, tag_id in enumerate(instance_tags):
                     class_probabilities[i, j, tag_id] = 1
-
             for metric in self.metrics.values():
                 metric(class_probabilities, tags, mask.float())
             if self.calculate_span_f1:
