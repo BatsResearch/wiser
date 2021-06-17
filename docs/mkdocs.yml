@@ -1,0 +1,6 @@
+site_name: WISER
+site_url: https://github.com/BatsResearch/wiser
+nav:
+    - Home: index.md
+    - About: about.md
+theme: readthedocs
