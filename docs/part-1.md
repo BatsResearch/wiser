@@ -242,7 +242,7 @@ from wiser.rules import LinkingRule
 
 
 ### Writing Linking Rules
-Tagging rules do not always correctly vote on all the tokens in multi-span entities. For instance, the **MovieYear** tagging rule only tags the last token in a movie span. Given the text span *The Great Gatsby (2013)*, it only identifies the token `Gatsby` as **I-PERF**.
+Tagging rules do not always correctly vote on all the tokens in multi-span entities. For instance, the `MovieYear` tagging rule only tags the last token in a movie span. Given the text span *The Great Gatsby (2013)*, it only identifies the token `Gatsby` as **I-PERF**.
 
 Our job is to ensure that the entire class spans are tagged correctly. Therefore, we can start by writing a linking rule to indicate that consecutively capitalized words should share the same tag. Therefore, voting that `The` and `Great` share the same tag as `Gatsby` would tag the entire movie name as **I-PERF**, rather than the last token.
 
@@ -390,7 +390,7 @@ score_tagging_rules(dev_data)
 
 ## Saving Progress
 
-We can use pickle to store the data with the tagging and linking rules applied to it
+We can use `pickle` to store the data with the tagging and linking rules applied to it
 
 ```python
 import pickle
