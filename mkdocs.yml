@@ -9,3 +9,5 @@ nav:
         - 'Part 2: Generative Models': part-2.md
         - 'Part 3: Neural Networks': part-3.md
 theme: readthedocs
+plugins:
+    - search
