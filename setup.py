@@ -13,7 +13,7 @@ setup(
     package_data={
         '': ['viewer/viewer.html', 'viewer/viewer.js'],
     },
-    install_requires=['allennlp==0.8.4', 'labelmodels'],
+    install_requires=['allennlp==2.5.0', 'labelmodels'],
     dependency_links=[
         'git+https://github.com/BatsResearch/labelmodels.git'
     ],
