@@ -1,5 +1,4 @@
-from allennlp.data import Instance
-from allennlp.data.dataset_readers import DatasetReader
+from allennlp.data import DatasetReader, Instance
 from allennlp.data.fields import TextField, SequenceLabelField
 from allennlp.data.token_indexers import TokenIndexer, SingleIdTokenIndexer
 from allennlp.data.tokenizers import Token
@@ -20,16 +19,16 @@ class NCBIDiseaseDatasetReader(DatasetReader):
     the "mention level" corpus available at
     https://www.ncbi.nlm.nih.gov/CBBresearch/Dogan/DISEASE/NCBI_corpus.zip
     """
-    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_regex: bool = True) -> None:
-        super().__init__(lazy=False)
+    def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, use_regex: bool = True, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.token_indexers = token_indexers or {"tokens": SingleIdTokenIndexer()}
 
         self.nlp = spacy.load('en_core_web_sm')
 
         if use_regex:
-            infix_re = compile_infix_regex(self.nlp.Defaults.infixes + tuple(r'-') + tuple(r'[/+=\(\)\[\]]'))
-            prefix_re = compile_prefix_regex(self.nlp.Defaults.prefixes + tuple(r'[\'\(\[]'))
-            suffix_re = compile_suffix_regex(self.nlp.Defaults.suffixes + tuple(r'[\.\+\)\]]'))
+            infix_re = compile_infix_regex(self.nlp.Defaults.infixes + list(r'-') + list(r'[/+=\(\)\[\]]'))
+            prefix_re = compile_prefix_regex(self.nlp.Defaults.prefixes + list(r'[\'\(\[]'))
+            suffix_re = compile_suffix_regex(self.nlp.Defaults.suffixes + list(r'[\.\+\)\]]'))
 
             self.nlp.tokenizer = Tokenizer(
                 self.nlp.vocab,
