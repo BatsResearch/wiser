@@ -116,6 +116,9 @@ class WiserCrfTagger(CrfTagger):
             for metric in self.metrics.values():
                 metric(class_probabilities, tags, mask.float())
             if self.calculate_span_f1:
+                print(class_probabilities)
+                print(tags)
+                print(mask.float())
                 self._f1_metric(class_probabilities, tags, mask.float())
 
         if metadata is not None:
