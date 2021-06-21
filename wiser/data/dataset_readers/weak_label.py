@@ -17,7 +17,7 @@ class WeakLabelDatasetReader(DatasetReader):
     to include in the data set.
     """
     def __init__(self, token_indexers: Dict[str, TokenIndexer] = None, split_sentences: bool = False) -> None:
-        super().__init__(lazy=False)
+        super().__init__()
         self.token_indexers = token_indexers
         self.split_sentences = split_sentences
 
