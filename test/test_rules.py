@@ -26,3 +26,4 @@ def test_import_DictionaryMatcher():
     """
     from wiser.rules import DictionaryMatcher
     assert True
+
