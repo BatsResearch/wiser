@@ -4,5 +4,6 @@
 # to ensure that you can use all WISER code.
 
 allennlp==2.5.0
+allennlp-models==2.5.0
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.0.0/en_core_web_sm-3.0.0.tar.gz#egg=en_core_web_sm
 git+git://github.com/BatsResearch/labelmodels@v0.1

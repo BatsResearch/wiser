@@ -1,4 +1,4 @@
-from allennlp.models import CrfTagger
+from allennlp_models.tagging.models import CrfTagger
 from typing import Dict, Optional, List, Any
 from overrides import overrides
 import torch
