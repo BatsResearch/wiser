@@ -114,12 +114,9 @@ class WiserCrfTagger(CrfTagger):
                 for j, tag_id in enumerate(instance_tags):
                     class_probabilities[i, j, tag_id] = 1
             for metric in self.metrics.values():
-                metric(class_probabilities, tags, mask.float())
+                metric(class_probabilities, tags, mask.bool())
             if self.calculate_span_f1:
-                print(class_probabilities)
-                print(tags)
-                print(mask.float())
-                self._f1_metric(class_probabilities, tags, mask.float())
+                self._f1_metric(class_probabilities, tags, mask.bool())
 
         if metadata is not None:
             output["words"] = [x["words"] for x in metadata]
