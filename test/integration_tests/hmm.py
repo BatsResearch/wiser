@@ -1,4 +1,5 @@
 from wiser.data.dataset_readers import MediaDatasetReader
+from wiser.viewer import Viewer
 
 dataset_reader = MediaDatasetReader()
 train_data = dataset_reader.read('data/wikipedia/unlabeled_train.csv')
@@ -36,6 +37,9 @@ class MovieYear(TaggingRule):
 # Applies the tagging rule to all dataset instances 
 tr = MovieYear()
 tr.apply(data)
+
+from wiser.eval.util import tagging_rule_errors
+Mistakes = tagging_rule_errors(dev_data, 'MovieYear', error_type = 'fp', mode = 'span')
 
 from wiser.eval import score_tagging_rules
 score_tagging_rules(dev_data)

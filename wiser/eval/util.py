@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-
+from wiser.viewer import Viewer
+from allennlp.data import Instance
 
 def score_labels_majority_vote(instances,  gold_label_key='tags',
                                treat_tie_as='O', span_level=True):
@@ -341,3 +342,60 @@ def _get_p_r_f1(tp, fp, fn):
     f1 = round(2 * p * r / (p + r) if p > 0 or r > 0 else 0.0, ndigits=4)
 
     return p, r, f1
+
+    
+def tagging_rule_errors(instances, rule, error_type='fn', gold_label_key='tags', mode = 'span'):
+    if not error_type in {'fn', 'fp', 'both'}:
+        raise IllegalArgumentException('Error_type must be one of \'fn\', \'fp\' or \'both\'')
+    if not mode in {'span', 'token'}:
+        raise IllegalArgumentException('Mode must be one of \'span\' or \'token\'')
+
+    data = []
+    for instance in instances:
+        predictions = instance['WISER_LABELS'][rule]
+        if mode == 'span':
+            scores = _score_sequence_span_level(predictions, instance[gold_label_key])
+        elif mode == 'token':
+            scores = _score_sequence_token_level(predictions, instance[gold_label_key])
+
+        if(scores[1] > 0 and error_type=='fp'):
+            data.append(instance)
+
+        elif(scores[2] > 0 and error_type == 'fn'):
+            data.append(instance)
+
+        elif (scores[1] > 0 or scores[2] > 0) and error_type == 'both':
+            data.append(instance)
+
+
+    # Collects results into an Instance
+    data = Instance(data)
+    return data
+
+def linking_rule_errors(instances, rule, error_type='fn', wiser_label_key = "WISER_LABELS", gold_label_key='tags', mode = 'span'):
+    if not error_type in {'fn', 'fp', 'both'}:
+        raise IllegalArgumentException('Error_type must be one of \'fn\', \'fp\' or \'both\'')
+    if not mode in {'span', 'token'}:
+        raise IllegalArgumentException('Mode must be one of \'span\' or \'token\'')
+
+    data = []
+    for instance in instances:
+        predictions = instance[wiser_label_key][rule]
+        if mode == 'span':
+            scores = _score_sequence_span_level(predictions, instance[gold_label_key])
+        elif mode == 'token':
+            scores = _score_sequence_token_level(predictions, instance[gold_label_key])
+
+        if(scores[1] > 0 and error_type=='fp'):
+            data.append(instance)
+
+        elif(scores[2] > 0 and error_type == 'fn'):
+            data.append(instance)
+
+        elif (scores[1] > 0 or scores[2] > 0) and error_type == 'both':
+            data.append(instance)
+
+
+    # Collects results into an Instance
+    data = Instance(data)
+    return data
