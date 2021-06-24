@@ -1,9 +1,9 @@
 from wiser.data.dataset_readers import MediaDatasetReader
 
 dataset_reader = MediaDatasetReader()
-train_data = dataset_reader.read('tutorials/introduction/data/wikipedia/unlabeled_train.csv')
-dev_data = dataset_reader.read('tutorials/introduction/data/wikipedia/labeled_dev.csv')
-test_data = dataset_reader.read('tutorials/introduction/data/wikipedia/labeled_test.csv')
+train_data = dataset_reader.read('data/wikipedia/unlabeled_train.csv')
+dev_data = dataset_reader.read('data/wikipedia/labeled_dev.csv')
+test_data = dataset_reader.read('data/wikipedia/labeled_test.csv')
 
 # In this tutorial we will use only 750 instances of the training data
 train_data = train_data[:10]
