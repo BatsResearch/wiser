@@ -371,3 +371,31 @@ def tagging_rule_errors(instances, rule, error_type='fn', gold_label_key='tags',
     # Collects results into an Instance
     data = Instance(data)
     return data
+
+def linking_rule_errors(instances, rule, error_type='fn', wiser_label_key = "WISER_LABELS", gold_label_key='tags', mode = 'span'):
+    if not error_type in {'fn', 'fp', 'both'}:
+        raise IllegalArgumentException('Error_type must be one of \'fn\', \'fp\' or \'both\'')
+    if not mode in {'span', 'token'}:
+        raise IllegalArgumentException('Mode must be one of \'span\' or \'token\'')
+
+    data = []
+    for instance in instances:
+        predictions = instance[wiser_label_key][rule]
+        if mode == 'span':
+            scores = _score_sequence_span_level(predictions, instance[gold_label_key])
+        elif mode == 'token':
+            scores = _score_sequence_token_level(predictions, instance[gold_label_key])
+
+        if(scores[1] > 0 and error_type=='fp'):
+            data.append(instance)
+
+        elif(scores[2] > 0 and error_type == 'fn'):
+            data.append(instance)
+
+        elif (scores[1] > 0 or scores[2] > 0) and error_type == 'both':
+            data.append(instance)
+
+
+    # Collects results into an Instance
+    data = Instance(data)
+    return data
