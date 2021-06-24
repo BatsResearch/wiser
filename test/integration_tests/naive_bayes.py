@@ -1,4 +1,5 @@
 from wiser.data.dataset_readers import MediaDatasetReader
+from wiser.viewer import Viewer
 
 dataset_reader = MediaDatasetReader()
 train_data = dataset_reader.read('data/wikipedia/unlabeled_train.csv')
