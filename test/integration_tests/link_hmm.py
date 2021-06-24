@@ -1,9 +1,9 @@
 from wiser.data.dataset_readers import MediaDatasetReader
 
 dataset_reader = MediaDatasetReader()
-train_data = dataset_reader.read('data/wikipedia/unlabeled_train.csv')
-dev_data = dataset_reader.read('data/wikipedia/labeled_dev.csv')
-test_data = dataset_reader.read('data/wikipedia/labeled_test.csv')
+train_data = dataset_reader.read('tutorials/introduction/data/wikipedia/unlabeled_train.csv')
+dev_data = dataset_reader.read('tutorials/introduction/data/wikipedia/labeled_dev.csv')
+test_data = dataset_reader.read('tutorials/introduction/data/wikipedia/labeled_test.csv')
 
 # In this tutorial we will use only 750 instances of the training data
 train_data = train_data[:10]
@@ -36,6 +36,9 @@ class MovieYear(TaggingRule):
 # Applies the tagging rule to all dataset instances 
 tr = MovieYear()
 tr.apply(data)
+from wiser.eval.util import tagging_rule_errors
+Mistakes = tagging_rule_errors(dev_data, 'MovieYear', error_type = 'fp', mode = 'span')
+Viewer(Mistakes, height=120)
 
 from wiser.eval import score_tagging_rules
 score_tagging_rules(dev_data)

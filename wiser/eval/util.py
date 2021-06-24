@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-
+from wiser.viewer import Viewer
+from allennlp.data import Instance
 
 def score_labels_majority_vote(instances,  gold_label_key='tags',
                                treat_tie_as='O', span_level=True):
@@ -342,27 +343,31 @@ def _get_p_r_f1(tp, fp, fn):
 
     return p, r, f1
 
+    
+def tagging_rule_errors(instances, rule, error_type='fn', gold_label_key='tags', mode = 'span'):
+    if not error_type in {'fn', 'fp', 'both'}:
+        raise IllegalArgumentException('Error_type must be one of \'fn\', \'fp\' or \'both\'')
+    if not mode in {'span', 'token'}:
+        raise IllegalArgumentException('Mode must be one of \'span\' or \'token\'')
 
-
-def tagging_rule_errors(instances, gold_label_key='tags'):
-    lf_scores = {}
+    data = []
     for instance in instances:
-        for lf_name, predictions in instance['WISER_LABELS'].items():
-            if lf_name not in lf_scores:
-                # Initializes true positive, false positive, false negative,
-                # correct, and total vote counts
-                lf_scores[lf_name] = [0, 0, 0, 0, 0]
-
+        predictions = instance['WISER_LABELS'][rule]
+        if mode == 'span':
             scores = _score_sequence_span_level(predictions, instance[gold_label_key])
-            lf_scores[lf_name][1] += scores[1]
-            lf_scores[lf_name][2] += scores[2]
+        elif mode == 'token':
+            scores = _score_sequence_token_level(predictions, instance[gold_label_key])
 
-            scores = _score_token_accuracy(predictions, instance[gold_label_key])
-            lf_scores[lf_name][3] += scores[0]
-            lf_scores[lf_name][4] += scores[1]
+        if(scores[1] > 0 and error_type=='fp'):
+            data.append(instance)
 
-    # Collects results into a dataframe
-    column_names = ["TP", "FP", "FN", "Token Acc.", "Token Votes"]
-    results = pd.DataFrame.from_dict(lf_scores, orient="index", columns=column_names)
-    results = pd.DataFrame.sort_index(results)
-    return results
+        elif(scores[2] > 0 and error_type == 'fn'):
+            data.append(instance)
+
+        elif (scores[1] > 0 or scores[2] > 0) and error_type == 'both':
+            data.append(instance)
+
+
+    # Collects results into an Instance
+    data = Instance(data)
+    return data

@@ -36,6 +36,9 @@ class MovieYear(TaggingRule):
 # Applies the tagging rule to all dataset instances 
 tr = MovieYear()
 tr.apply(data)
+from wiser.eval.util import tagging_rule_errors
+Mistakes = tagging_rule_errors(dev_data, 'MovieYear', error_type = 'fp', mode = 'span')
+Viewer(Mistakes, height=120)
 
 from wiser.eval import score_tagging_rules
 score_tagging_rules(dev_data)
