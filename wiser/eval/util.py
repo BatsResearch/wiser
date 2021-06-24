@@ -341,3 +341,28 @@ def _get_p_r_f1(tp, fp, fn):
     f1 = round(2 * p * r / (p + r) if p > 0 or r > 0 else 0.0, ndigits=4)
 
     return p, r, f1
+
+
+
+def tagging_rule_errors(instances, gold_label_key='tags'):
+    lf_scores = {}
+    for instance in instances:
+        for lf_name, predictions in instance['WISER_LABELS'].items():
+            if lf_name not in lf_scores:
+                # Initializes true positive, false positive, false negative,
+                # correct, and total vote counts
+                lf_scores[lf_name] = [0, 0, 0, 0, 0]
+
+            scores = _score_sequence_span_level(predictions, instance[gold_label_key])
+            lf_scores[lf_name][1] += scores[1]
+            lf_scores[lf_name][2] += scores[2]
+
+            scores = _score_token_accuracy(predictions, instance[gold_label_key])
+            lf_scores[lf_name][3] += scores[0]
+            lf_scores[lf_name][4] += scores[1]
+
+    # Collects results into a dataframe
+    column_names = ["TP", "FP", "FN", "Token Acc.", "Token Votes"]
+    results = pd.DataFrame.from_dict(lf_scores, orient="index", columns=column_names)
+    results = pd.DataFrame.sort_index(results)
+    return results
