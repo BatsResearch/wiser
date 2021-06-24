@@ -59,13 +59,13 @@ class NCBIDiseaseDatasetReader(DatasetReader):
                         # Sorts the annotations by start character
                         annotations.sort(key=lambda x: int(x[0]))
 
-                        tokens = [Token(token.text,
-                                        token.idx,
-                                        token.lemma_,
-                                        token.pos_,
-                                        token.tag_,
-                                        token.dep_,
-                                        token.ent_type_) for token in doc]
+                        tokens = [Token(text=token.text,
+                                        idx=token.idx,
+                                        lemma_=token.lemma_,
+                                        pos_=token.pos_,
+                                        tag_=token.tag_,
+                                        dep_=token.dep_,
+                                        ent_type_=token.ent_type_) for token in doc]
 
                         # Assigns tags based on annotations
                         tags = []
