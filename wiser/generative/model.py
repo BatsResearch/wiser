@@ -5,7 +5,7 @@ from wiser.eval import get_generative_model_inputs
 
 class Model:
 
-    def __init__(self, model_module, init_acc=0.9, acc_prior=50, balance_prior=100):
+    def __init__(self, model_module, init_acc=0.9, acc_prior=50, balance_prior=100, reinitialize=True):
         """
         Initializes a predefined generative model using the given parameters
 
@@ -17,6 +17,8 @@ class Model:
         :param balance_prior:       used to regularize the class prior in naiveBayes or the initial class distribution
                                     for HMM and linkedHMM, as well as the transition matrix in those methods,
                                     towards a more uniform distribution.
+        :reinitialize:              used to determine if the model should reinitialize weights upon sequential calls of
+                                    model.train
         """
 
         self.model_module = model_module
@@ -24,6 +26,7 @@ class Model:
         self.init_acc = init_acc
         self.acc_prior = acc_prior
         self.balance_prior = balance_prior
+        self.reinitialize = reinitialize
 
         self.gen_label_to_ix = None
         self.disc_label_to_ix = None
@@ -41,13 +44,13 @@ class Model:
         self.gen_label_to_ix, self.disc_label_to_ix = get_label_to_ix(train_data + dev_data)
         tagging_rules, linking_rules = get_rules(train_data + dev_data)
 
-        if self.model_type == 'NaiveBayes' or self.model_type == 'HMM':
+        if (self.model_type == 'NaiveBayes' or self.model_type == 'HMM') and (self.model == None or self.reinitialize):
             self.model = self.model_module(len(self.gen_label_to_ix) - 1, len(tagging_rules),
                                       self.init_acc, self.acc_prior, self.balance_prior)
-        elif self.model_type == 'LinkedHMM':
+        elif self.model_type == 'LinkedHMM' and (self.model == None or self.reinitialize):
             self.model = self.model_module(len(self.gen_label_to_ix) - 1, len(tagging_rules), len(linking_rules),
                                       self.init_acc, self.acc_prior, self.balance_prior)
-        else:
+        elif not self.model_type in ['NaiveBayes', 'HMM', 'LinkedHMM']:
             raise ValueError("Unknown model type: %s" % str(type(self.model_type)))
 
         p, r, f1 = train_generative_model(self.model, train_data, dev_data,
