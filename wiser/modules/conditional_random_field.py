@@ -1,9 +1,9 @@
 import torch
 from allennlp.modules.conditional_random_field import ConditionalRandomField
-import sys
-from loguru import logger
-logger.remove()
-logger.add(sys.stderr, format="{level} {level.icon} | [{time}] - {message}")
+# import sys
+# from loguru import logger
+# logger.remove()
+# logger.add(sys.stderr, format="{level} {level.icon} | [{time}] - {message}")
 
 
 class WiserConditionalRandomField(ConditionalRandomField):
