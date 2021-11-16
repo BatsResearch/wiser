@@ -124,7 +124,7 @@ class WiserCrfTagger(CrfTagger):
 
 
 @Model.register("denoised_wiser_crf_tagger")
-class WiserCrfTagger(WiserCrfTagger):
+class DenoisedWiserCrfTagger(WiserCrfTagger):
 
     def __init__(self, vocab: Vocabulary,
                  text_field_embedder: TextFieldEmbedder,
